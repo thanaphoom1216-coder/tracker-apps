@@ -3,1160 +3,1653 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Habit Tracker</title>
-    
-    <!-- Chart.js Library -->
+    <title>[SYSTEM: ETERNAL LEVELING]</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    
-    <!-- Confetti Library -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    
     <style>
-        /* ========================================
-           COLOR PALETTE
-           ======================================== */
+        /* ============================
+           CSS VARIABLES
+           ============================ */
         :root {
-            --bg-main: #FFF8F0;
-            --bg-peach: #FFE8D6;
-            --glass-white: rgba(255, 255, 255, 0.75);
-            --glass-border: rgba(255, 255, 255, 0.4);
-            --text-primary: #2C2C2C;
-            --text-secondary: #6B6B6B;
-            --border-light: #E5E5E5;
-            --border-medium: #D4D4D4;
-            --accent-teal: #14B8A6;
-            --accent-teal-dark: #0D9488;
-            --accent-gold: #F59E0B;
-            --accent-gold-light: #FCD34D;
-            --shadow-soft: rgba(0, 0, 0, 0.1);
-            --shadow-medium: rgba(0, 0, 0, 0.15);
+            --void:        #000814;
+            --panel:       rgba(0, 14, 33, 0.92);
+            --panel-b:     rgba(0, 212, 255, 0.22);
+            --blue:        #00d4ff;
+            --blue-dim:    rgba(0, 212, 255, 0.10);
+            --blue-mid:    rgba(0, 212, 255, 0.28);
+            --blue-glow:   rgba(0, 212, 255, 0.55);
+            --blue-bright: rgba(0, 212, 255, 0.85);
+            --gold:        #ffd700;
+            --gold-dim:    rgba(255, 215, 0, 0.12);
+            --text:        #c8e8f8;
+            --text-muted:  #4a7a94;
+            --red:         #ff1a47;
+            --red-dim:     rgba(255, 26, 71, 0.12);
+            --red-mid:     rgba(255, 26, 71, 0.30);
+            --red-glow:    rgba(255, 26, 71, 0.55);
         }
 
-        /* ========================================
-           RESET & BASE
-           ======================================== */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        /* Penalty Mode — override blues to reds */
+        body.penalty-mode {
+            --blue:        var(--red);
+            --blue-dim:    var(--red-dim);
+            --blue-mid:    var(--red-mid);
+            --blue-glow:   var(--red-glow);
+            --panel-b:     rgba(255, 26, 71, 0.25);
         }
+
+        /* ============================
+           RESET & BASE
+           ============================ */
+        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+        html { scroll-behavior: smooth; }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, var(--bg-main) 0%, var(--bg-peach) 100%);
-            color: var(--text-primary);
+            font-family: 'Rajdhani', sans-serif;
+            background: var(--void);
+            color: var(--text);
             min-height: 100vh;
-            padding-bottom: env(safe-area-inset-bottom, 80px);
-            padding-bottom: calc(80px + env(safe-area-inset-bottom));
+            padding-bottom: calc(84px + env(safe-area-inset-bottom));
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Scan-line grid background */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                repeating-linear-gradient(
+                    0deg,
+                    transparent 0px, transparent 3px,
+                    rgba(0,212,255,0.018) 3px, rgba(0,212,255,0.018) 4px
+                ),
+                repeating-linear-gradient(
+                    90deg,
+                    transparent 0px, transparent 55px,
+                    rgba(0,212,255,0.010) 55px, rgba(0,212,255,0.010) 56px
+                );
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Ambient corner glows */
+        body::after {
+            content: '';
+            position: fixed;
+            top: -250px; left: -250px;
+            width: 700px; height: 700px;
+            background: radial-gradient(circle, rgba(0,212,255,0.055) 0%, transparent 65%);
+            pointer-events: none;
+            z-index: 0;
         }
 
         .container {
-            max-width: 900px;
+            position: relative;
+            z-index: 1;
+            max-width: 980px;
             margin: 0 auto;
             padding: 20px;
             padding-top: max(20px, env(safe-area-inset-top));
         }
 
-        /* ========================================
-           GLASSMORPHISM CARDS
-           ======================================== */
-        .glass-card {
-            background: var(--glass-white);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            box-shadow: 
-                0 8px 32px var(--shadow-soft),
-                0 2px 8px var(--shadow-medium);
+        /* ============================
+           SYS PANEL CARD
+           ============================ */
+        .sys-panel {
+            background: var(--panel);
+            border: 1px solid var(--panel-b);
+            border-radius: 3px;
+            box-shadow:
+                0 0 30px rgba(0,212,255,0.07),
+                0 2px 12px rgba(0,0,0,0.5),
+                inset 0 1px 0 rgba(0,212,255,0.08);
+            position: relative;
+            transition: border-color 0.4s, box-shadow 0.4s;
         }
 
-        /* ========================================
+        /* Top-left corner pip */
+        .sys-panel::before {
+            content: '';
+            position: absolute;
+            top: -1px; left: -1px;
+            width: 14px; height: 14px;
+            border-top: 2px solid var(--blue);
+            border-left: 2px solid var(--blue);
+            pointer-events: none;
+            transition: border-color 0.4s;
+        }
+
+        /* Bottom-right corner pip */
+        .sys-panel::after {
+            content: '';
+            position: absolute;
+            bottom: -1px; right: -1px;
+            width: 14px; height: 14px;
+            border-bottom: 2px solid var(--blue);
+            border-right: 2px solid var(--blue);
+            pointer-events: none;
+            transition: border-color 0.4s;
+        }
+
+        /* ============================
            HEADER
-           ======================================== */
+           ============================ */
         .header {
             text-align: center;
-            margin-bottom: 20px;
-            padding: 24px 20px;
+            padding: 28px 24px 22px;
+            margin-bottom: 14px;
         }
 
-        .header h1 {
-            font-size: 2rem;
-            color: var(--text-primary);
-            font-weight: 700;
-            margin-bottom: 5px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        .sys-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(1.05rem, 3.5vw, 1.75rem);
+            font-weight: 900;
+            color: var(--blue);
+            text-shadow: 0 0 18px var(--blue-glow), 0 0 40px rgba(0,212,255,0.25);
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+            transition: color 0.4s, text-shadow 0.4s;
         }
 
-        .header p {
-            font-size: 0.95rem;
-            color: var(--text-secondary);
+        /* Blinking cursor */
+        .sys-title::after {
+            content: '█';
+            animation: blink 1.1s step-end infinite;
+            font-size: 0.85em;
+            opacity: 0.6;
+            margin-left: 4px;
         }
+        @keyframes blink { 50% { opacity: 0; } }
 
-        /* ========================================
-           XP BAR with GRADIENT
-           ======================================== */
-        .xp-section {
-            padding: 18px 24px;
-            margin-bottom: 20px;
-        }
-
-        .xp-info {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-
-        .level-display {
-            font-size: 1.4rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, var(--accent-teal) 0%, var(--accent-gold) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .xp-text {
-            font-size: 0.95rem;
-            color: var(--text-secondary);
+        .sys-subtitle {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            letter-spacing: 4px;
+            text-transform: uppercase;
             font-weight: 600;
         }
 
-        .xp-bar-container {
+        .header-date {
+            margin-top: 6px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+        }
+
+        /* ============================
+           XP BAR
+           ============================ */
+        .xp-section {
+            padding: 16px 22px;
+            margin-bottom: 14px;
+        }
+
+        .xp-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .level-rank-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .level-num {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--blue);
+            text-shadow: 0 0 14px var(--blue-glow);
+            transition: color 0.4s, text-shadow 0.4s;
+        }
+
+        .rank-badge {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 4px 11px;
+            border: 1px solid var(--blue);
+            border-radius: 2px;
+            color: var(--blue);
+            background: var(--blue-dim);
+            letter-spacing: 1.5px;
+            box-shadow: 0 0 10px rgba(0,212,255,0.2);
+            transition: all 0.4s;
+        }
+
+        .rank-badge.s-rank {
+            color: var(--gold);
+            border-color: var(--gold);
+            background: var(--gold-dim);
+            box-shadow: 0 0 16px rgba(255,215,0,0.4);
+            animation: goldPulse 2.5s ease-in-out infinite;
+        }
+        @keyframes goldPulse {
+            0%,100% { box-shadow: 0 0 16px rgba(255,215,0,0.4); }
+            50%      { box-shadow: 0 0 28px rgba(255,215,0,0.7); }
+        }
+
+        .xp-nums {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .xp-bar-track {
             width: 100%;
-            height: 24px;
-            background: rgba(255, 255, 255, 0.5);
-            border-radius: 12px;
+            height: 10px;
+            background: rgba(0,212,255,0.06);
+            border: 1px solid var(--blue-mid);
             overflow: hidden;
-            border: 1px solid var(--glass-border);
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+            position: relative;
         }
 
         .xp-bar-fill {
             height: 100%;
-            background: linear-gradient(90deg, var(--accent-teal) 0%, var(--accent-gold) 100%);
-            border-radius: 12px;
-            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 0 12px rgba(20, 184, 166, 0.4);
+            background: linear-gradient(90deg,
+                rgba(0,180,220,0.7) 0%,
+                var(--blue) 45%,
+                rgba(0,240,255,0.9) 100%
+            );
+            transition: width 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 14px var(--blue-glow), 0 0 4px var(--blue);
+            position: relative;
         }
 
-        @keyframes levelUpPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
-
-        .level-up-animation {
-            animation: levelUpPulse 0.6s ease-in-out;
-        }
-
-        /* Gold flash overlay */
-        .level-up-flash {
-            position: fixed;
-            top: 0;
-            left: 0;
+        /* Moving shimmer */
+        .xp-bar-fill::after {
+            content: '';
+            position: absolute;
+            top: 0; bottom: 0;
+            width: 40px;
             right: 0;
-            bottom: 0;
-            background: radial-gradient(circle, rgba(245, 158, 11, 0.4) 0%, transparent 70%);
-            pointer-events: none;
-            opacity: 0;
-            z-index: 9999;
-            animation: flashGold 1s ease-out;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent);
+            animation: xpShimmer 1.8s ease-in-out infinite;
+        }
+        @keyframes xpShimmer {
+            0%   { opacity:0; transform:translateX(-30px); }
+            50%  { opacity:1; }
+            100% { opacity:0; transform:translateX(30px); }
         }
 
-        @keyframes flashGold {
-            0%, 100% { opacity: 0; }
-            50% { opacity: 1; }
-        }
-
-        /* Level up message */
-        .level-up-message {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: linear-gradient(135deg, var(--accent-gold) 0%, var(--accent-gold-light) 100%);
-            color: white;
-            padding: 32px 48px;
-            border-radius: 20px;
-            font-size: 2.5rem;
-            font-weight: 800;
-            box-shadow: 0 12px 40px rgba(245, 158, 11, 0.5);
-            z-index: 10000;
-            opacity: 0;
-            animation: levelUpMessage 2s ease-out;
-            pointer-events: none;
-        }
-
-        @keyframes levelUpMessage {
-            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
-            20% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
-            80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-            100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
-        }
-
-        /* ========================================
-           TAB CONTENT
-           ======================================== */
-        .tab-content {
+        /* ============================
+           PENALTY BANNER
+           ============================ */
+        .penalty-banner {
             display: none;
+            background: rgba(255,26,71,0.14);
+            border: 1px solid var(--red);
+            border-radius: 3px;
+            padding: 13px 20px;
+            margin-bottom: 14px;
+            text-align: center;
+            color: var(--red);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            box-shadow: 0 0 24px rgba(255,26,71,0.28);
+            animation: penaltyPulse 2s ease-in-out infinite;
+        }
+        .penalty-banner.active { display: block; }
+        @keyframes penaltyPulse {
+            0%,100% { box-shadow: 0 0 24px rgba(255,26,71,0.28); }
+            50%      { box-shadow: 0 0 44px rgba(255,26,71,0.55); }
         }
 
-        .tab-content.active {
-            display: block;
-        }
+        /* ============================
+           TAB CONTENT
+           ============================ */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
 
-        /* ========================================
+        /* ============================
            INPUT SECTION
-           ======================================== */
+           ============================ */
         .input-section {
-            padding: 18px 20px;
-            margin-bottom: 20px;
+            padding: 18px 22px;
+            margin-bottom: 14px;
+        }
+
+        .sys-label {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: var(--blue);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 14px;
+            opacity: 0.75;
+            transition: color 0.4s;
         }
 
         .input-group {
             display: flex;
             gap: 10px;
+            flex-wrap: wrap;
         }
 
-        #habitInput {
+        .sys-input {
             flex: 1;
-            padding: 14px 16px;
-            border: 2px solid var(--border-medium);
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.9);
-            color: var(--text-primary);
+            min-width: 160px;
+            padding: 11px 15px;
+            background: rgba(0,18,40,0.85);
+            border: 1px solid var(--blue-mid);
+            border-radius: 2px;
+            color: var(--text);
+            font-family: 'Rajdhani', sans-serif;
             font-size: 1rem;
+            font-weight: 500;
             outline: none;
-            transition: all 0.3s ease;
+            transition: border-color 0.25s, box-shadow 0.25s;
+        }
+        .sys-input::placeholder { color: var(--text-muted); }
+        .sys-input:focus {
+            border-color: var(--blue);
+            box-shadow: 0 0 0 2px var(--blue-dim), 0 0 14px rgba(0,212,255,0.15);
+        }
+        .sys-input.error {
+            border-color: var(--red);
+            box-shadow: 0 0 0 2px var(--red-dim);
         }
 
-        #habitInput::placeholder {
-            color: var(--text-secondary);
-        }
-
-        #habitInput:focus {
-            border-color: var(--accent-teal);
-            box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.1);
-        }
-
-        #addHabitBtn {
-            padding: 14px 28px;
-            background: linear-gradient(135deg, var(--accent-teal) 0%, var(--accent-teal-dark) 100%);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-weight: 600;
+        .sys-select {
+            padding: 11px 13px;
+            background: rgba(0,18,40,0.85);
+            border: 1px solid var(--blue-mid);
+            border-radius: 2px;
+            color: var(--text);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            outline: none;
             cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(20, 184, 166, 0.3);
+            transition: border-color 0.25s;
         }
+        .sys-select:focus { border-color: var(--blue); }
+        .sys-select option { background: #000d20; }
 
-        #addHabitBtn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(20, 184, 166, 0.4);
+        .sys-btn {
+            padding: 11px 22px;
+            background: var(--blue-dim);
+            color: var(--blue);
+            border: 1px solid var(--blue);
+            border-radius: 2px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s, box-shadow 0.2s, transform 0.15s;
+            box-shadow: 0 0 14px rgba(0,212,255,0.15);
+            white-space: nowrap;
         }
-
-        #addHabitBtn:active {
-            transform: translateY(0);
+        .sys-btn:hover {
+            background: var(--blue);
+            color: #000810;
+            box-shadow: 0 0 22px var(--blue-glow);
+            transform: translateY(-1px);
         }
+        .sys-btn:active { transform: translateY(0); }
 
-        /* ========================================
-           HABIT TABLE with ICONS
-           ======================================== */
-        .habit-grid-section {
-            padding: 24px;
-            margin-bottom: 20px;
+        /* ============================
+           HABIT TABLE
+           ============================ */
+        .quest-section {
+            padding: 20px 22px;
+            margin-bottom: 14px;
             overflow-x: auto;
         }
 
-        .section-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 18px;
+        .today-marker { position: relative; }
+        .today-marker::after {
+            content: '▼';
+            display: block;
+            text-align: center;
+            font-size: 0.5rem;
+            color: var(--blue);
+            margin-top: 2px;
+            opacity: 0.7;
         }
 
         .habit-table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 700px;
+            min-width: 760px;
         }
 
-        .habit-table thead {
-            background: rgba(255, 255, 255, 0.6);
+        .habit-table thead tr {
+            border-bottom: 1px solid var(--blue-mid);
         }
 
         .habit-table th {
-            padding: 14px 12px;
+            padding: 10px 9px;
             text-align: center;
-            color: var(--text-primary);
-            font-weight: 600;
-            border: 1px solid var(--border-light);
-            font-size: 0.85rem;
+            color: var(--blue);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.62rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            white-space: nowrap;
+            transition: color 0.4s;
         }
-
-        .habit-table th:first-child {
-            text-align: left;
-            min-width: 180px;
-        }
-
-        .habit-table th:nth-child(2) {
-            min-width: 70px;
-        }
+        .habit-table th:first-child { text-align: left; min-width: 165px; }
+        .habit-table th.col-attrib { min-width: 68px; }
+        .habit-table th.col-goal   { min-width: 52px; }
 
         .habit-table td {
-            padding: 14px 12px;
-            border: 1px solid var(--border-light);
+            padding: 9px 9px;
             text-align: center;
-            background: rgba(255, 255, 255, 0.8);
-            transition: background 0.2s ease;
+            border-bottom: 1px solid rgba(0,212,255,0.055);
+            color: var(--text);
+            font-weight: 500;
         }
+        .habit-table td:first-child { text-align: left; }
+        .habit-table tbody tr:hover td { background: rgba(0,212,255,0.04); }
 
-        .habit-table td:first-child {
-            text-align: left;
-        }
-
-        .habit-table tbody tr:hover {
-            background: rgba(255, 255, 255, 0.95);
+        /* Today highlight column */
+        .habit-table td.today-col,
+        .habit-table th.today-col {
+            background: rgba(0,212,255,0.055);
         }
 
         .habit-name-cell {
             display: flex;
             align-items: center;
-            gap: 10px;
-        }
-
-        .habit-name {
-            flex: 1;
-            color: var(--text-primary);
-            font-weight: 500;
+            gap: 8px;
         }
 
         .delete-btn {
             background: none;
             border: none;
-            color: var(--text-secondary);
-            font-size: 1.1rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
             cursor: pointer;
-            padding: 4px;
-            transition: all 0.2s ease;
-            opacity: 0.6;
+            padding: 2px 4px;
+            transition: color 0.2s, transform 0.15s;
+            opacity: 0.45;
+            font-family: 'Orbitron', sans-serif;
         }
-
-        .delete-btn:hover {
-            color: #EF4444;
-            opacity: 1;
-            transform: scale(1.1);
-        }
+        .delete-btn:hover { color: var(--red); opacity: 1; transform: scale(1.15); }
 
         .goal-input {
-            width: 50px;
-            padding: 6px;
-            background: rgba(255, 255, 255, 0.9);
-            border: 1px solid var(--border-medium);
-            border-radius: 6px;
-            color: var(--text-primary);
+            width: 44px;
+            padding: 5px;
+            background: rgba(0,18,40,0.8);
+            border: 1px solid var(--blue-mid);
+            border-radius: 2px;
+            color: var(--text);
             text-align: center;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
+            font-family: 'Orbitron', sans-serif;
         }
+        .goal-input:focus { outline: none; border-color: var(--blue); }
 
-        .goal-input:focus {
-            outline: none;
-            border-color: var(--accent-teal);
-        }
-
-        /* Streak column */
-        .streak-cell {
-            color: var(--accent-gold);
+        /* Attribute tags */
+        .attr-tag {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.58rem;
             font-weight: 700;
-            font-size: 0.95rem;
+            padding: 2px 5px;
+            border-radius: 2px;
+            border: 1px solid;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
         }
+        .attr-strength    { color:#ff7a7a; border-color:rgba(255,122,122,0.5); background:rgba(255,122,122,0.08); }
+        .attr-agility     { color:#7aff9e; border-color:rgba(122,255,158,0.5); background:rgba(122,255,158,0.08); }
+        .attr-intelligence{ color:#7ab8ff; border-color:rgba(122,184,255,0.5); background:rgba(122,184,255,0.08); }
+        .attr-sense       { color:#ffd97a; border-color:rgba(255,217,122,0.5); background:rgba(255,217,122,0.08); }
+        .attr-vitality    { color:#cc7aff; border-color:rgba(204,122,255,0.5); background:rgba(204,122,255,0.08); }
 
-        /* Custom Checkboxes */
-        .checkbox-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .day-checkbox {
+        /* Custom checkbox */
+        .day-cb {
             appearance: none;
-            width: 26px;
-            height: 26px;
-            border: 2px solid var(--border-medium);
-            border-radius: 6px;
+            width: 23px; height: 23px;
+            border: 1px solid var(--blue-mid);
+            border-radius: 2px;
             cursor: pointer;
+            background: rgba(0,18,40,0.7);
             position: relative;
-            background: white;
-            transition: all 0.2s ease;
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
-
-        .day-checkbox:hover {
-            border-color: var(--accent-teal);
-            box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
+        .day-cb:hover {
+            border-color: var(--blue);
+            box-shadow: 0 0 8px var(--blue-mid);
         }
-
-        .day-checkbox:checked {
-            background: white;
-            border-color: var(--accent-teal);
+        .day-cb:checked {
+            background: var(--blue-dim);
+            border-color: var(--blue);
+            box-shadow: 0 0 10px rgba(0,212,255,0.22);
         }
-
-        .day-checkbox:checked::after {
+        .day-cb:checked::after {
             content: '✕';
             position: absolute;
-            top: 50%;
-            left: 50%;
+            top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            color: var(--accent-teal);
-            font-size: 20px;
+            color: var(--blue);
+            font-size: 15px;
             font-weight: bold;
             line-height: 1;
+            text-shadow: 0 0 6px var(--blue-glow);
+        }
+
+        .streak-cell {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.82rem;
+            color: var(--gold);
+            font-weight: 700;
+            text-shadow: 0 0 8px rgba(255,215,0,0.4);
         }
 
         .empty-state {
             text-align: center;
-            padding: 40px 20px;
-            color: var(--text-secondary);
-            font-style: italic;
+            padding: 44px 20px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            letter-spacing: 1.5px;
+            font-family: 'Orbitron', sans-serif;
         }
 
-        /* ========================================
-           STATS TAB - Avatar & Charts
-           ======================================== */
-        .stats-container {
-            display: grid;
-            gap: 20px;
+        /* ============================
+           STATS TAB
+           ============================ */
+        .stats-grid { display: grid; gap: 14px; }
+
+        .stats-panel { padding: 24px; }
+
+        .stats-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: var(--blue);
+            letter-spacing: 3px;
+            margin-bottom: 22px;
+            text-transform: uppercase;
+            opacity: 0.8;
+            transition: color 0.4s;
         }
 
-        .stats-card {
-            padding: 28px;
-        }
-
-        .stats-card h2 {
-            font-size: 1.3rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 20px;
-        }
-
-        /* Avatar Circle */
-        .avatar-section {
+        /* Bio-Diagnostic HUD */
+        .bio-hud {
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin-bottom: 24px;
+            gap: 22px;
         }
 
-        .avatar-circle {
-            width: 160px;
-            height: 160px;
+        .avatar-hud-wrap {
+            position: relative;
+            width: 158px; height: 158px;
+        }
+
+        /* Outer pulsing ring */
+        .avatar-ring-outer {
+            position: absolute;
+            inset: -12px;
             border-radius: 50%;
-            background: linear-gradient(135deg, rgba(20, 184, 166, 0.2) 0%, rgba(245, 158, 11, 0.2) 100%);
+            border: 1px solid rgba(0,212,255,0.18);
+            animation: ringPulse 3s ease-in-out infinite;
+        }
+        @keyframes ringPulse {
+            0%,100% { opacity:0.4; transform:scale(1); }
+            50%      { opacity:0.9; transform:scale(1.04); }
+        }
+
+        /* Main glowing ring */
+        .avatar-ring-main {
+            position: absolute;
+            inset: -5px;
+            border-radius: 50%;
+            border: 2px solid var(--blue-mid);
+            box-shadow: 0 0 18px var(--blue-mid), inset 0 0 18px rgba(0,212,255,0.04);
+        }
+
+        /* Spinning accent arc */
+        .avatar-ring-spin {
+            position: absolute;
+            inset: -5px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            border-top-color: var(--blue);
+            border-right-color: rgba(0,212,255,0.35);
+            animation: spinRing 3.5s linear infinite;
+        }
+        @keyframes spinRing { to { transform: rotate(360deg); } }
+
+        .avatar-inner {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle at 40% 35%,
+                rgba(0,212,255,0.12) 0%,
+                rgba(0,10,28,0.95) 65%
+            );
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 5rem;
-            box-shadow: 
-                0 8px 24px rgba(0, 0, 0, 0.12),
-                inset 0 2px 4px rgba(255, 255, 255, 0.5);
-            border: 4px solid rgba(255, 255, 255, 0.7);
-            margin-bottom: 16px;
-            transition: transform 0.3s ease;
-        }
-
-        .avatar-circle:hover {
-            transform: scale(1.05);
-        }
-
-        .avatar-rank {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-        }
-
-        .avatar-rank-name {
-            color: var(--accent-teal);
-            font-weight: 700;
-        }
-
-        /* Summary Grid */
-        .summary-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-            margin-bottom: 20px;
-        }
-
-        .summary-item {
-            text-align: center;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.5);
-            border-radius: 12px;
-            border: 1px solid var(--glass-border);
-        }
-
-        .summary-label {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 8px;
-        }
-
-        .summary-value {
-            font-size: 2.2rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, var(--accent-teal) 0%, var(--accent-gold) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .chart-container {
+            font-size: 4.5rem;
+            border: 1px solid var(--blue-mid);
             position: relative;
-            height: 300px;
+            z-index: 1;
+            transition: transform 0.3s;
+        }
+        .avatar-inner:hover { transform: scale(1.04); }
+
+        .bio-form-label {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+        }
+        .bio-form-label span {
+            color: var(--blue);
+            font-weight: 700;
+            transition: color 0.4s;
         }
 
-        /* ========================================
-           FOOTER NAVIGATION
-           ======================================== */
+        .bio-stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            width: 100%;
+        }
+
+        .bio-stat {
+            text-align: center;
+            padding: 14px 8px;
+            background: var(--blue-dim);
+            border: 1px solid var(--panel-b);
+            border-radius: 2px;
+            transition: background 0.4s, border-color 0.4s;
+        }
+        .bio-stat-label {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.58rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 7px;
+        }
+        .bio-stat-val {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.45rem;
+            font-weight: 700;
+            color: var(--blue);
+            text-shadow: 0 0 12px var(--blue-glow);
+            transition: color 0.4s, text-shadow 0.4s;
+        }
+        .bio-stat-val.gold {
+            color: var(--gold);
+            text-shadow: 0 0 12px rgba(255,215,0,0.45);
+        }
+
+        /* Radar Chart */
+        .chart-wrap {
+            position: relative;
+            height: 295px;
+        }
+
+        /* Inventory Grid */
+        .inv-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 9px;
+        }
+
+        .inv-slot {
+            aspect-ratio: 1 / 1;
+            background: rgba(0,14,33,0.8);
+            border: 1px solid rgba(0,212,255,0.12);
+            border-radius: 3px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            transition: border-color 0.25s, box-shadow 0.25s, transform 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .inv-slot.unlocked {
+            border-color: var(--blue-mid);
+            background: var(--blue-dim);
+            box-shadow: 0 0 10px rgba(0,212,255,0.08);
+        }
+        .inv-slot.unlocked:hover {
+            border-color: var(--blue);
+            box-shadow: 0 0 18px var(--blue-mid);
+            transform: translateY(-2px);
+        }
+        .inv-slot.locked { opacity: 0.28; }
+
+        .inv-emoji { font-size: 1.7rem; line-height: 1; }
+        .inv-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.46rem;
+            color: var(--blue);
+            text-align: center;
+            letter-spacing: 0.3px;
+            line-height: 1.3;
+            padding: 0 2px;
+            transition: color 0.4s;
+        }
+        .inv-slot.locked .inv-name { color: var(--text-muted); }
+
+        /* ============================
+           LEVEL UP EFFECTS
+           ============================ */
+        .lvl-overlay {
+            position: fixed; inset: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(0,212,255,0.18) 0%, transparent 70%);
+            pointer-events: none;
+            opacity: 0;
+            z-index: 9990;
+        }
+        .lvl-overlay.flash { animation: lvlFlash 1.4s ease-out forwards; }
+        @keyframes lvlFlash {
+            0%   { opacity: 0; }
+            20%  { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        .lvl-popup {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0.4);
+            background: rgba(0,10,25,0.97);
+            border: 2px solid var(--blue);
+            padding: 30px 52px;
+            text-align: center;
+            box-shadow: 0 0 70px var(--blue-glow), inset 0 0 50px rgba(0,212,255,0.04);
+            pointer-events: none;
+            opacity: 0;
+            z-index: 10000;
+        }
+        .lvl-popup.show { animation: lvlPopup 2.8s ease-out forwards; }
+        @keyframes lvlPopup {
+            0%   { opacity:0; transform:translate(-50%,-50%) scale(0.4); }
+            14%  { opacity:1; transform:translate(-50%,-50%) scale(1.06); }
+            85%  { opacity:1; transform:translate(-50%,-50%) scale(1); }
+            100% { opacity:0; transform:translate(-50%,-50%) scale(0.9); }
+        }
+        .lvl-popup-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(1.6rem, 5vw, 2.2rem);
+            font-weight: 900;
+            color: var(--blue);
+            text-shadow: 0 0 22px var(--blue-glow);
+            letter-spacing: 5px;
+        }
+        .lvl-popup-sub {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-top: 10px;
+            letter-spacing: 2px;
+        }
+
+        /* ============================
+           FOOTER NAV
+           ============================ */
         .footer-nav {
             position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: var(--glass-white);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-top: 1px solid var(--glass-border);
-            box-shadow: 0 -4px 16px var(--shadow-soft);
+            bottom: 0; left: 0; right: 0;
+            background: rgba(0,8,20,0.96);
+            border-top: 1px solid var(--panel-b);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            padding: 10px 20px;
+            padding-bottom: calc(10px + env(safe-area-inset-bottom));
             display: flex;
             justify-content: center;
-            padding: 12px 20px;
-            padding-bottom: calc(12px + env(safe-area-inset-bottom));
-            z-index: 1000;
+            z-index: 200;
         }
 
-        .nav-buttons {
+        .nav-btns {
             display: flex;
-            gap: 12px;
-            max-width: 400px;
+            gap: 10px;
+            max-width: 420px;
             width: 100%;
         }
 
         .nav-btn {
             flex: 1;
-            padding: 16px 20px;
-            background: rgba(255, 255, 255, 0.6);
-            color: var(--text-primary);
-            border: 2px solid var(--border-light);
-            border-radius: 12px;
-            font-size: 1rem;
-            font-weight: 600;
+            padding: 14px 16px;
+            background: rgba(0,14,33,0.9);
+            color: var(--text-muted);
+            border: 1px solid rgba(0,212,255,0.18);
+            border-radius: 2px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.62rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: all 0.22s;
+            text-transform: uppercase;
         }
-
         .nav-btn:hover {
-            background: rgba(255, 255, 255, 0.8);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-color: var(--blue-mid);
+            color: var(--text);
         }
-
         .nav-btn.active {
-            background: linear-gradient(135deg, var(--accent-teal) 0%, var(--accent-teal-dark) 100%);
-            color: white;
-            border-color: var(--accent-teal);
-            box-shadow: 0 4px 16px rgba(20, 184, 166, 0.3);
+            background: var(--blue-dim);
+            color: var(--blue);
+            border-color: var(--blue);
+            box-shadow: 0 0 14px rgba(0,212,255,0.18);
+            text-shadow: 0 0 8px var(--blue-glow);
         }
 
-        /* ========================================
-           MOBILE RESPONSIVENESS
-           ======================================== */
+        /* ============================
+           MOBILE
+           ============================ */
         @media (max-width: 768px) {
-            .container {
-                padding: 15px;
-            }
-
-            .header h1 {
-                font-size: 1.6rem;
-            }
-
-            .input-group {
-                flex-direction: column;
-            }
-
-            #addHabitBtn {
-                width: 100%;
-            }
-
-            .habit-table {
-                font-size: 0.85rem;
-            }
-
-            .habit-table th,
-            .habit-table td {
-                padding: 10px 8px;
-            }
-
-            .day-checkbox {
-                width: 22px;
-                height: 22px;
-            }
-
-            .day-checkbox:checked::after {
-                font-size: 17px;
-            }
-
-            .summary-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .avatar-circle {
-                width: 140px;
-                height: 140px;
-                font-size: 4rem;
-            }
-
-            .level-up-message {
-                font-size: 2rem;
-                padding: 24px 36px;
-            }
+            .container { padding: 12px; }
+            .input-group { flex-direction: column; }
+            .sys-btn { width: 100%; }
+            .bio-stats-row { grid-template-columns: 1fr 1fr 1fr; }
+        }
+        @media (max-width: 480px) {
+            .bio-stats-row { grid-template-columns: 1fr 1fr; }
+            .inv-grid { grid-template-columns: repeat(4, 1fr); gap: 6px; }
         }
     </style>
 </head>
 <body>
+
+    <!-- Level-up effects -->
+    <div class="lvl-overlay" id="lvlOverlay"></div>
+    <div class="lvl-popup"  id="lvlPopup">
+        <div class="lvl-popup-title">LEVEL UP</div>
+        <div class="lvl-popup-sub" id="lvlPopupSub">YOU ARE NOW LEVEL 2</div>
+    </div>
+
     <div class="container">
-        <!-- HEADER -->
-        <div class="header glass-card">
-            <h1>Habit Tracker</h1>
-            <p>Build consistency, level up your life</p>
+
+        <!-- ===== HEADER ===== -->
+        <div class="header sys-panel">
+            <div class="sys-title">[SYSTEM: ETERNAL LEVELING]</div>
+            <div class="sys-subtitle">// AWAKENING PROTOCOL ACTIVE //</div>
+            <div class="header-date" id="headerDate"></div>
         </div>
 
-        <!-- XP BAR -->
-        <div class="xp-section glass-card">
-            <div class="xp-info">
-                <div class="level-display" id="levelDisplay">Level 1</div>
-                <div class="xp-text">
-                    <span id="currentXP">0</span> / <span id="maxXP">100</span> XP
+        <!-- ===== XP BAR ===== -->
+        <div class="xp-section sys-panel">
+            <div class="xp-header">
+                <div class="level-rank-row">
+                    <div class="level-num" id="levelDisplay">LV.01</div>
+                    <div class="rank-badge" id="rankBadge">E-RANK</div>
+                </div>
+                <div class="xp-nums">
+                    <span id="currentXP">0</span> / <span id="maxXP">100</span>&nbsp;XP
                 </div>
             </div>
-            <div class="xp-bar-container">
-                <div class="xp-bar-fill" id="xpBarFill" style="width: 0%"></div>
+            <div class="xp-bar-track">
+                <div class="xp-bar-fill" id="xpBarFill" style="width:0%"></div>
             </div>
         </div>
 
-        <!-- HOME TAB -->
+        <!-- ===== PENALTY BANNER ===== -->
+        <div class="penalty-banner" id="penaltyBanner">
+            ⚠&nbsp;&nbsp;[WARNING: INCOMPLETE QUEST]&nbsp;&nbsp;—&nbsp;&nbsp;PENALTY ENFORCED: −30 XP&nbsp;&nbsp;⚠
+        </div>
+
+        <!-- ===== HOME TAB ===== -->
         <div id="homeTab" class="tab-content active">
-            <div class="input-section glass-card">
+
+            <div class="input-section sys-panel">
+                <div class="sys-label">// NEW QUEST ENTRY //</div>
                 <div class="input-group">
-                    <input 
-                        type="text" 
-                        id="habitInput" 
-                        placeholder="Enter new habit..."
+                    <input
+                        type="text"
+                        id="habitInput"
+                        class="sys-input"
+                        placeholder="Enter quest designation..."
                         autocomplete="off"
                     >
-                    <button id="addHabitBtn">Add Habit</button>
+                    <select id="attrSelect" class="sys-select">
+                        <option value="strength">⚔ STRENGTH</option>
+                        <option value="agility">💨 AGILITY</option>
+                        <option value="intelligence">🧠 INTELLIGENCE</option>
+                        <option value="sense">👁 SENSE</option>
+                        <option value="vitality">💚 VITALITY</option>
+                    </select>
+                    <button id="addHabitBtn" class="sys-btn">[ + REGISTER ]</button>
                 </div>
             </div>
 
-            <div class="habit-grid-section glass-card">
-                <div class="section-title">Weekly Tracker</div>
+            <div class="quest-section sys-panel">
+                <div class="sys-label">// QUEST LOG: ACTIVE //</div>
                 <table class="habit-table">
-                    <thead>
+                    <thead id="habitTableHead">
                         <tr>
-                            <th>📋 Habit</th>
-                            <th>🎯 Goal</th>
-                            <th>Mon</th>
-                            <th>Tue</th>
-                            <th>Wed</th>
-                            <th>Thu</th>
-                            <th>Fri</th>
-                            <th>Sat</th>
-                            <th>Sun</th>
+                            <th>QUEST</th>
+                            <th class="col-attrib">ATTRIB</th>
+                            <th class="col-goal">GOAL</th>
+                            <th>MON</th>
+                            <th>TUE</th>
+                            <th>WED</th>
+                            <th>THU</th>
+                            <th>FRI</th>
+                            <th>SAT</th>
+                            <th>SUN</th>
                             <th>🔥</th>
                         </tr>
                     </thead>
                     <tbody id="habitTableBody">
                         <tr>
-                            <td colspan="10" class="empty-state">
-                                No habits yet. Add your first habit to get started!
+                            <td colspan="11" class="empty-state">
+                                [ NO ACTIVE QUESTS DETECTED — REGISTER A NEW QUEST TO BEGIN ]
                             </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
-        </div>
 
-        <!-- STATS TAB -->
+        </div><!-- /homeTab -->
+
+        <!-- ===== STATS TAB ===== -->
         <div id="statsTab" class="tab-content">
-            <div class="stats-container">
-                <!-- Avatar Card -->
-                <div class="stats-card glass-card">
-                    <h2>Your Character</h2>
-                    <div class="avatar-section">
-                        <div class="avatar-circle" id="avatarCircle">🥚</div>
-                        <div class="avatar-rank">
-                            Current Form: <span class="avatar-rank-name" id="avatarRank">Egg</span>
+            <div class="stats-grid">
+
+                <!-- Bio-Diagnostic HUD -->
+                <div class="stats-panel sys-panel">
+                    <div class="stats-title">// BIO-DIAGNOSTIC: STATUS WINDOW //</div>
+                    <div class="bio-hud">
+                        <div class="avatar-hud-wrap">
+                            <div class="avatar-ring-outer"></div>
+                            <div class="avatar-ring-main"></div>
+                            <div class="avatar-ring-spin"></div>
+                            <div class="avatar-inner" id="avatarCircle">🥚</div>
                         </div>
-                    </div>
-                    <div class="summary-grid">
-                        <div class="summary-item">
-                            <div class="summary-label">Total XP</div>
-                            <div class="summary-value" id="lifetimeXP">0</div>
+                        <div class="bio-form-label">
+                            CURRENT FORM:&nbsp;<span id="avatarRank">EGG</span>
                         </div>
-                        <div class="summary-item">
-                            <div class="summary-label">Level</div>
-                            <div class="summary-value" id="statsLevel">1</div>
+                        <div class="bio-stats-row">
+                            <div class="bio-stat">
+                                <div class="bio-stat-label">LEVEL</div>
+                                <div class="bio-stat-val" id="statsLevel">1</div>
+                            </div>
+                            <div class="bio-stat">
+                                <div class="bio-stat-label">RANK</div>
+                                <div class="bio-stat-val" id="statsRank">E</div>
+                            </div>
+                            <div class="bio-stat">
+                                <div class="bio-stat-label">TOTAL XP</div>
+                                <div class="bio-stat-val gold" id="lifetimeXP">0</div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Chart Card -->
-                <div class="stats-card glass-card">
-                    <h2>Daily Activity</h2>
-                    <div class="chart-container">
-                        <canvas id="weeklyChart"></canvas>
+                <!-- Radar Chart -->
+                <div class="stats-panel sys-panel">
+                    <div class="stats-title">// ATTRIBUTE ANALYSIS //</div>
+                    <div class="chart-wrap">
+                        <canvas id="radarChart"></canvas>
                     </div>
                 </div>
+
+                <!-- Inventory -->
+                <div class="stats-panel sys-panel">
+                    <div class="stats-title">// ITEM INVENTORY — UNLOCK EVERY ODD LEVEL //</div>
+                    <div class="inv-grid" id="inventoryGrid"></div>
+                </div>
+
             </div>
-        </div>
-    </div>
+        </div><!-- /statsTab -->
 
-    <!-- FOOTER NAVIGATION -->
+    </div><!-- /container -->
+
+    <!-- ===== FOOTER NAV ===== -->
     <div class="footer-nav">
-        <div class="nav-buttons">
-            <button class="nav-btn active" id="homeNavBtn">🏠 Home</button>
-            <button class="nav-btn" id="statsNavBtn">📊 Stats</button>
+        <div class="nav-btns">
+            <button class="nav-btn active" id="homeNavBtn">⚔ QUEST LOG</button>
+            <button class="nav-btn"        id="statsNavBtn">◈ STAT WINDOW</button>
         </div>
     </div>
 
     <script>
-        // ========================================
-        // ELEMENTS
-        // ========================================
-        const habitInput = document.getElementById('habitInput');
-        const addHabitBtn = document.getElementById('addHabitBtn');
-        const habitTableBody = document.getElementById('habitTableBody');
-        const levelDisplay = document.getElementById('levelDisplay');
-        const currentXPDisplay = document.getElementById('currentXP');
-        const maxXPDisplay = document.getElementById('maxXP');
-        const xpBarFill = document.getElementById('xpBarFill');
-        const lifetimeXPDisplay = document.getElementById('lifetimeXP');
-        const statsLevelDisplay = document.getElementById('statsLevel');
-        const avatarCircle = document.getElementById('avatarCircle');
-        const avatarRank = document.getElementById('avatarRank');
+    // ============================================================
+    //  ELEMENTS
+    // ============================================================
+    const habitInput      = document.getElementById('habitInput');
+    const attrSelect      = document.getElementById('attrSelect');
+    const addHabitBtn     = document.getElementById('addHabitBtn');
+    const habitTableHead  = document.getElementById('habitTableHead');
+    const habitTableBody  = document.getElementById('habitTableBody');
+    const levelDisplay    = document.getElementById('levelDisplay');
+    const rankBadgeEl     = document.getElementById('rankBadge');
+    const currentXPEl     = document.getElementById('currentXP');
+    const maxXPEl         = document.getElementById('maxXP');
+    const xpBarFill       = document.getElementById('xpBarFill');
+    const lifetimeXPEl    = document.getElementById('lifetimeXP');
+    const statsLevelEl    = document.getElementById('statsLevel');
+    const statsRankEl     = document.getElementById('statsRank');
+    const avatarCircleEl  = document.getElementById('avatarCircle');
+    const avatarRankEl    = document.getElementById('avatarRank');
+    const penaltyBanner   = document.getElementById('penaltyBanner');
+    const inventoryGrid   = document.getElementById('inventoryGrid');
+    const lvlOverlay      = document.getElementById('lvlOverlay');
+    const lvlPopup        = document.getElementById('lvlPopup');
+    const lvlPopupSub     = document.getElementById('lvlPopupSub');
+    const homeTab         = document.getElementById('homeTab');
+    const statsTab        = document.getElementById('statsTab');
+    const homeNavBtn      = document.getElementById('homeNavBtn');
+    const statsNavBtn     = document.getElementById('statsNavBtn');
+    const headerDate      = document.getElementById('headerDate');
 
-        const homeTab = document.getElementById('homeTab');
-        const statsTab = document.getElementById('statsTab');
-        const homeNavBtn = document.getElementById('homeNavBtn');
-        const statsNavBtn = document.getElementById('statsNavBtn');
+    // ============================================================
+    //  STATE
+    // ============================================================
+    let currentLevel    = 1;
+    let currentXP       = 0;
+    let lifetimeXP      = 0;
+    const XP_PER_CHECK  = 20;
+    const XP_TO_LEVEL   = 100;
 
-        // ========================================
-        // STATE
-        // ========================================
-        let currentLevel = 1;
-        let currentXP = 0;
-        let lifetimeXP = 0;
-        const xpPerCheck = 20;
-        const xpToLevelUp = 100;
+    let habits          = [];
+    let habitIdCounter  = 0;
+    let lastPenaltyDate = '';
 
-        let habits = [];
-        let habitIdCounter = 0;
+    const DAYS = ['mon','tue','wed','thu','fri','sat','sun'];
+    const DAY_LABELS = ['MON','TUE','WED','THU','FRI','SAT','SUN'];
 
-        const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+    // ============================================================
+    //  RANK & AVATAR
+    // ============================================================
+    function getRank(lvl) {
+        if (lvl <= 10) return 'E';
+        if (lvl <= 20) return 'D';
+        if (lvl <= 30) return 'C';
+        if (lvl <= 40) return 'B';
+        if (lvl <= 50) return 'A';
+        return 'S';
+    }
 
-        // ========================================
-        // AVATAR SYSTEM
-        // ========================================
-        function getAvatar(level) {
-            if (level <= 5) return { emoji: '🥚', name: 'Egg' };
-            if (level <= 10) return { emoji: '🐣', name: 'Hatching' };
-            if (level <= 20) return { emoji: '🐥', name: 'Chick' };
-            return { emoji: '🦅', name: 'Eagle' };
-        }
+    function getAvatar(lvl) {
+        if (lvl <= 5)  return { emoji:'🥚',  name:'EGG' };
+        if (lvl <= 10) return { emoji:'🐣',  name:'HATCHING' };
+        if (lvl <= 20) return { emoji:'🐥',  name:'CHICK' };
+        return               { emoji:'🦅',  name:'EAGLE' };
+    }
 
-        function updateAvatar() {
-            const avatar = getAvatar(currentLevel);
-            avatarCircle.textContent = avatar.emoji;
-            avatarRank.textContent = avatar.name;
-        }
+    // ============================================================
+    //  INVENTORY
+    // ============================================================
+    const INVENTORY_ITEMS = [
+        { level:1,  emoji:'🗡️', name:'BROKEN SWORD'   },
+        { level:3,  emoji:'🛡️', name:'OLD SHIELD'     },
+        { level:5,  emoji:'🧤', name:'LEATHER GLOVES' },
+        { level:7,  emoji:'🗡️', name:'STEEL DAGGER'   },
+        { level:9,  emoji:'🏹', name:"HUNTER'S BOW"   },
+        { level:11, emoji:'🧥', name:'STEALTH CLOAK'  },
+        { level:13, emoji:'🧪', name:'MANA POTION'    },
+        { level:15, emoji:'💍', name:"MONARCH'S RING" },
+        { level:17, emoji:'👑', name:'CROWN'          },
+    ];
 
-        // ========================================
-        // STREAK CALCULATION
-        // ========================================
-        function calculateStreak(habit) {
-            // Simple streak: count consecutive days from Monday
-            let streak = 0;
-            for (let day of DAYS) {
-                if (habit.completedDays[day]) {
-                    streak++;
-                } else {
-                    break; // Streak broken
-                }
-            }
-            return streak;
-        }
+    function renderInventory() {
+        inventoryGrid.innerHTML = '';
+        for (let i = 0; i < 12; i++) {
+            const item = INVENTORY_ITEMS[i];
+            const slot = document.createElement('div');
+            slot.className = 'inv-slot';
 
-        // ========================================
-        // LOCALSTORAGE
-        // ========================================
-        function saveToLocalStorage() {
-            const data = {
-                habits: habits,
-                currentLevel: currentLevel,
-                currentXP: currentXP,
-                lifetimeXP: lifetimeXP,
-                habitIdCounter: habitIdCounter
-            };
-            localStorage.setItem('habitTrackerData', JSON.stringify(data));
-        }
-
-        function loadFromLocalStorage() {
-            const savedData = localStorage.getItem('habitTrackerData');
-            if (savedData) {
-                const data = JSON.parse(savedData);
-                habits = data.habits || [];
-                currentLevel = data.currentLevel || 1;
-                currentXP = data.currentXP || 0;
-                lifetimeXP = data.lifetimeXP || 0;
-                habitIdCounter = data.habitIdCounter || 0;
-            }
-        }
-
-        // ========================================
-        // XP & LEVEL
-        // ========================================
-        function updateXPBar() {
-            const percentage = (currentXP / xpToLevelUp) * 100;
-            xpBarFill.style.width = percentage + '%';
-            currentXPDisplay.textContent = currentXP;
-            maxXPDisplay.textContent = xpToLevelUp;
-            levelDisplay.textContent = 'Level ' + currentLevel;
-            
-            lifetimeXPDisplay.textContent = lifetimeXP;
-            statsLevelDisplay.textContent = currentLevel;
-            
-            updateAvatar();
-        }
-
-        function gainXP(amount) {
-            currentXP += amount;
-            lifetimeXP += amount;
-
-            if (currentXP >= xpToLevelUp) {
-                levelUp();
+            if (!item) {
+                // empty filler slot
+                slot.classList.add('locked');
+                slot.innerHTML = `<span style="font-size:1rem;opacity:0.25">⬡</span>`;
+            } else if (currentLevel >= item.level) {
+                slot.classList.add('unlocked');
+                slot.title = item.name;
+                slot.innerHTML = `
+                    <span class="inv-emoji">${item.emoji}</span>
+                    <span class="inv-name">${item.name}</span>`;
             } else {
-                updateXPBar();
+                slot.classList.add('locked');
+                slot.innerHTML = `
+                    <span class="inv-emoji" style="filter:grayscale(1);opacity:0.22">❓</span>
+                    <span class="inv-name">LV.${String(item.level).padStart(2,'0')}</span>`;
             }
-            
-            saveToLocalStorage();
+            inventoryGrid.appendChild(slot);
         }
+    }
 
-        function levelUp() {
-            const overflowXP = currentXP - xpToLevelUp;
-            currentLevel++;
-            currentXP = overflowXP;
-            
-            updateXPBar();
-            
-            // Level up animation
-            levelDisplay.classList.add('level-up-animation');
-            setTimeout(() => {
-                levelDisplay.classList.remove('level-up-animation');
-            }, 600);
-            
-            // Gold flash
-            const flash = document.createElement('div');
-            flash.className = 'level-up-flash';
-            document.body.appendChild(flash);
-            setTimeout(() => flash.remove(), 1000);
-            
-            // Level up message
-            const message = document.createElement('div');
-            message.className = 'level-up-message';
-            message.textContent = 'LEVEL UP!';
-            document.body.appendChild(message);
-            setTimeout(() => message.remove(), 2000);
-            
-            // Confetti burst
-            confetti({
-                particleCount: 150,
-                spread: 80,
-                origin: { y: 0.5 }
+    // ============================================================
+    //  AUDIO (Web Audio API — no CDN needed)
+    // ============================================================
+    let _audioCtx = null;
+    function getAudioCtx() {
+        if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        return _audioCtx;
+    }
+
+    function playPing() {
+        try {
+            const ctx = getAudioCtx();
+            const osc  = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(1600, ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.12);
+            gain.gain.setValueAtTime(0.10, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.22);
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 0.22);
+        } catch(e) {}
+    }
+
+    function playLevelUp() {
+        try {
+            const ctx = getAudioCtx();
+            const freqs = [523, 659, 784, 1047, 1318]; // C5 E5 G5 C6 E6
+            freqs.forEach((freq, i) => {
+                const osc  = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain); gain.connect(ctx.destination);
+                osc.type = 'sine';
+                osc.frequency.value = freq;
+                const t = ctx.currentTime + i * 0.11;
+                gain.gain.setValueAtTime(0.13, t);
+                gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.45);
+                osc.start(t);
+                osc.stop(t + 0.45);
             });
-            
-            saveToLocalStorage();
+        } catch(e) {}
+    }
+
+    function playPenalty() {
+        try {
+            const ctx = getAudioCtx();
+            const osc  = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(280, ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(70, ctx.currentTime + 0.6);
+            gain.gain.setValueAtTime(0.09, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.65);
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 0.65);
+        } catch(e) {}
+    }
+
+    // ============================================================
+    //  STREAK
+    // ============================================================
+    function calcStreak(habit) {
+        let s = 0;
+        for (const d of DAYS) {
+            if (habit.completedDays[d]) s++;
+            else break;
         }
+        return s;
+    }
 
-        // ========================================
-        // CONFETTI on CHECKBOX
-        // ========================================
-        function triggerConfetti(event) {
-            const rect = event.target.getBoundingClientRect();
-            const x = (rect.left + rect.width / 2) / window.innerWidth;
-            const y = (rect.top + rect.height / 2) / window.innerHeight;
-            
-            confetti({
-                particleCount: 30,
-                spread: 50,
-                origin: { x, y },
-                colors: ['#14B8A6', '#F59E0B', '#FCD34D']
-            });
+    // ============================================================
+    //  LOCALSTORAGE
+    // ============================================================
+    function save() {
+        localStorage.setItem('habitTrackerData', JSON.stringify({
+            habits, currentLevel, currentXP, lifetimeXP,
+            habitIdCounter, lastPenaltyDate
+        }));
+    }
+
+    function load() {
+        const raw = localStorage.getItem('habitTrackerData');
+        if (!raw) return;
+        const d = JSON.parse(raw);
+        habits          = d.habits          || [];
+        currentLevel    = d.currentLevel    || 1;
+        currentXP       = d.currentXP       || 0;
+        lifetimeXP      = d.lifetimeXP      || 0;
+        habitIdCounter  = d.habitIdCounter  || 0;
+        lastPenaltyDate = d.lastPenaltyDate || '';
+    }
+
+    // ============================================================
+    //  XP / LEVEL DISPLAY
+    // ============================================================
+    function refreshHUD() {
+        const pct   = Math.min((currentXP / XP_TO_LEVEL) * 100, 100);
+        xpBarFill.style.width = pct + '%';
+        currentXPEl.textContent = currentXP;
+        maxXPEl.textContent     = XP_TO_LEVEL;
+
+        const lvlStr = String(currentLevel).padStart(2,'0');
+        levelDisplay.textContent = 'LV.' + lvlStr;
+
+        const rank = getRank(currentLevel);
+        rankBadgeEl.textContent = rank + '-RANK';
+        rankBadgeEl.className   = 'rank-badge' + (rank === 'S' ? ' s-rank' : '');
+
+        statsLevelEl.textContent  = currentLevel;
+        statsRankEl.textContent   = rank;
+        lifetimeXPEl.textContent  = lifetimeXP;
+
+        const av = getAvatar(currentLevel);
+        avatarCircleEl.textContent = av.emoji;
+        avatarRankEl.textContent   = av.name;
+
+        renderInventory();
+    }
+
+    function gainXP(amount) {
+        currentXP  += amount;
+        lifetimeXP += amount;
+        if (currentXP >= XP_TO_LEVEL) {
+            triggerLevelUp();
+        } else {
+            refreshHUD();
         }
+        save();
+    }
 
-        // ========================================
-        // HABITS
-        // ========================================
-        function addHabit() {
-            const habitName = habitInput.value.trim();
-
-            if (habitName === '') {
-                alert('Please enter a habit name!');
-                return;
+    function loseXP(amount) {
+        currentXP -= amount;
+        if (currentXP < 0) {
+            if (currentLevel > 1) {
+                currentLevel--;
+                currentXP = XP_TO_LEVEL + currentXP; // carry overflow
+            } else {
+                currentXP = 0;
             }
+        }
+        refreshHUD();
+        save();
+    }
 
-            const newHabit = {
-                id: habitIdCounter++,
-                name: habitName,
-                goal: '',
-                completedDays: {
-                    mon: false, tue: false, wed: false,
-                    thu: false, fri: false, sat: false, sun: false
-                }
-            };
+    function triggerLevelUp() {
+        const overflow = currentXP - XP_TO_LEVEL;
+        currentLevel++;
+        currentXP = Math.max(overflow, 0);
+        refreshHUD();
 
-            habits.push(newHabit);
-            habitInput.value = '';
+        lvlPopupSub.textContent = `YOU ARE NOW LEVEL ${currentLevel} — ${getRank(currentLevel)}-RANK`;
+        lvlOverlay.classList.remove('flash');
+        lvlPopup.classList.remove('show');
+        void lvlOverlay.offsetWidth; // reflow
+        lvlOverlay.classList.add('flash');
+        lvlPopup.classList.add('show');
+        setTimeout(() => {
+            lvlOverlay.classList.remove('flash');
+            lvlPopup.classList.remove('show');
+        }, 3000);
+
+        playLevelUp();
+        confetti({
+            particleCount: 130,
+            spread: 85,
+            colors: ['#00d4ff','#ffffff','#ffd700','#00ffcc'],
+            origin: { y: 0.5 }
+        });
+        save();
+    }
+
+    // ============================================================
+    //  PENALTY SYSTEM
+    // ============================================================
+    function getTodayKey() {
+        const map = ['sun','mon','tue','wed','thu','fri','sat'];
+        return map[new Date().getDay()];
+    }
+
+    function checkPenalty() {
+        const now   = new Date();
+        const today = now.toDateString();
+        if (now.getHours() < 22 || lastPenaltyDate === today) return;
+        if (habits.length === 0) return;
+
+        const todayKey  = getTodayKey();
+        const completed = habits.filter(h => h.completedDays[todayKey]).length;
+        const ratio     = completed / habits.length;
+
+        if (ratio < 0.6) {
+            lastPenaltyDate = today;
+            applyPenalty();
+            save();
+        }
+    }
+
+    function applyPenalty() {
+        document.body.classList.add('penalty-mode');
+        penaltyBanner.classList.add('active');
+        loseXP(30);
+        playPenalty();
+        setTimeout(() => {
+            document.body.classList.remove('penalty-mode');
+            penaltyBanner.classList.remove('active');
+        }, 12000);
+    }
+
+    setInterval(checkPenalty, 60000);
+
+    // ============================================================
+    //  CONFETTI on CHECK
+    // ============================================================
+    function checkConfetti(evt) {
+        const r = evt.target.getBoundingClientRect();
+        confetti({
+            particleCount: 28,
+            spread: 50,
+            origin: {
+                x: (r.left + r.width  / 2) / window.innerWidth,
+                y: (r.top  + r.height / 2) / window.innerHeight
+            },
+            colors: ['#00d4ff','#ffffff','#ffd700'],
+            scalar: 0.85
+        });
+    }
+
+    // ============================================================
+    //  ATTRIBUTE HELPERS
+    // ============================================================
+    const ATTR_MAP = {
+        strength:     { label:'STR', cls:'attr-strength'     },
+        agility:      { label:'AGI', cls:'attr-agility'      },
+        intelligence: { label:'INT', cls:'attr-intelligence'  },
+        sense:        { label:'SEN', cls:'attr-sense'        },
+        vitality:     { label:'VIT', cls:'attr-vitality'     },
+    };
+
+    function attrTag(attr) {
+        const a = ATTR_MAP[attr] || ATTR_MAP.strength;
+        return `<span class="attr-tag ${a.cls}">${a.label}</span>`;
+    }
+
+    function getAttrPoints() {
+        const pts = { strength:0, agility:0, intelligence:0, sense:0, vitality:0 };
+        habits.forEach(h => {
+            const a = h.attribute || 'strength';
+            DAYS.forEach(d => { if (h.completedDays[d]) pts[a]++; });
+        });
+        return pts;
+    }
+
+    // ============================================================
+    //  TODAY COLUMN HELPER
+    // ============================================================
+    function getTodayColIndex() {
+        return DAYS.indexOf(getTodayKey()); // 0–6 or -1
+    }
+
+    // ============================================================
+    //  RENDER TABLE HEADER (highlight today)
+    // ============================================================
+    function renderTableHeader() {
+        const todayIdx = getTodayColIndex();
+        let html = `<tr>
+            <th>QUEST</th>
+            <th class="col-attrib">ATTRIB</th>
+            <th class="col-goal">GOAL</th>`;
+        DAYS.forEach((d, i) => {
+            const cls = (i === todayIdx) ? 'today-col today-marker' : '';
+            html += `<th class="${cls}">${DAY_LABELS[i]}</th>`;
+        });
+        html += `<th>🔥</th></tr>`;
+        habitTableHead.innerHTML = html;
+    }
+
+    // ============================================================
+    //  ADD HABIT
+    // ============================================================
+    function addHabit() {
+        const name = habitInput.value.trim();
+        if (!name) {
+            habitInput.classList.add('error');
+            setTimeout(() => habitInput.classList.remove('error'), 900);
             habitInput.focus();
-            
+            return;
+        }
+        habits.push({
+            id: habitIdCounter++,
+            name,
+            attribute: attrSelect.value,
+            goal: '',
+            completedDays: { mon:false, tue:false, wed:false, thu:false, fri:false, sat:false, sun:false }
+        });
+        habitInput.value = '';
+        habitInput.focus();
+        playPing();
+        renderHabits();
+        save();
+    }
+
+    function deleteHabit(id) {
+        if (!confirm('[SYSTEM]: Permanently remove this quest from the log?')) return;
+        habits = habits.filter(h => h.id !== id);
+        renderHabits();
+        save();
+        updateRadarChart();
+    }
+
+    function handleCheckbox(id, day, checked, evt) {
+        const h = habits.find(h => h.id === id);
+        if (!h) return;
+        if (checked && !h.completedDays[day]) {
+            h.completedDays[day] = true;
+            gainXP(XP_PER_CHECK);
+            playPing();
+            checkConfetti(evt);
             renderHabits();
-            saveToLocalStorage();
+            updateRadarChart();
+        } else if (!checked) {
+            // Prevent unchecking — once done, stays done
+            evt.target.checked = true;
+        }
+        save();
+    }
+
+    // ============================================================
+    //  RENDER HABITS
+    // ============================================================
+    function renderHabits() {
+        renderTableHeader();
+        habitTableBody.innerHTML = '';
+
+        if (habits.length === 0) {
+            habitTableBody.innerHTML =
+                `<tr><td colspan="11" class="empty-state">
+                    [ NO ACTIVE QUESTS DETECTED — REGISTER A NEW QUEST TO BEGIN ]
+                </td></tr>`;
+            return;
         }
 
-        function deleteHabit(habitId) {
-            if (confirm('Delete this habit?')) {
-                habits = habits.filter(h => h.id !== habitId);
-                renderHabits();
-                saveToLocalStorage();
-                updateChart();
-            }
-        }
+        const todayIdx = getTodayColIndex();
 
-        function handleCheckboxChange(habitId, day, isChecked, event) {
-            const habit = habits.find(h => h.id === habitId);
-            if (!habit) return;
+        habits.forEach(habit => {
+            const row = document.createElement('tr');
 
-            if (isChecked) {
-                if (!habit.completedDays[day]) {
-                    habit.completedDays[day] = true;
-                    gainXP(xpPerCheck);
-                    triggerConfetti(event); // Confetti!
-                    renderHabits(); // Re-render to update streak
-                    updateChart();
-                }
-            }
-            
-            saveToLocalStorage();
-        }
+            // Quest name cell
+            const nameTd = document.createElement('td');
+            nameTd.innerHTML = `
+                <div class="habit-name-cell">
+                    <span style="flex:1;font-weight:600">${escHtml(habit.name)}</span>
+                    <button class="delete-btn" data-id="${habit.id}" title="Remove quest">✕</button>
+                </div>`;
+            row.appendChild(nameTd);
 
-        function renderHabits() {
-            habitTableBody.innerHTML = '';
+            // Attribute cell
+            const attrTd = document.createElement('td');
+            attrTd.innerHTML = attrTag(habit.attribute || 'strength');
+            row.appendChild(attrTd);
 
-            if (habits.length === 0) {
-                habitTableBody.innerHTML = `
-                    <tr>
-                        <td colspan="10" class="empty-state">
-                            No habits yet. Add your first habit to get started!
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
+            // Goal cell
+            const goalTd = document.createElement('td');
+            goalTd.innerHTML = `<input type="number" class="goal-input" placeholder="#" value="${escHtml(habit.goal)}" data-id="${habit.id}">`;
+            row.appendChild(goalTd);
 
-            habits.forEach(habit => {
-                const row = document.createElement('tr');
-
-                // Habit name
-                const nameCell = document.createElement('td');
-                nameCell.innerHTML = `
-                    <div class="habit-name-cell">
-                        <span class="habit-name">${habit.name}</span>
-                        <button class="delete-btn" data-habit-id="${habit.id}">🗑</button>
-                    </div>
-                `;
-                row.appendChild(nameCell);
-
-                // Goal
-                const goalCell = document.createElement('td');
-                goalCell.innerHTML = `
-                    <input 
-                        type="number" 
-                        class="goal-input" 
-                        placeholder="#"
-                        value="${habit.goal}"
-                        data-habit-id="${habit.id}"
-                    >
-                `;
-                row.appendChild(goalCell);
-
-                // Days
-                DAYS.forEach(day => {
-                    const dayCell = document.createElement('td');
-                    dayCell.innerHTML = `
-                        <div class="checkbox-container">
-                            <input 
-                                type="checkbox" 
-                                class="day-checkbox"
-                                data-habit-id="${habit.id}"
-                                data-day="${day}"
-                                ${habit.completedDays[day] ? 'checked' : ''}
-                            >
-                        </div>
-                    `;
-                    row.appendChild(dayCell);
-                });
-
-                // Streak
-                const streakCell = document.createElement('td');
-                streakCell.className = 'streak-cell';
-                const streak = calculateStreak(habit);
-                streakCell.textContent = streak > 0 ? streak : '-';
-                row.appendChild(streakCell);
-
-                habitTableBody.appendChild(row);
+            // Day checkboxes
+            DAYS.forEach((day, i) => {
+                const td = document.createElement('td');
+                if (i === todayIdx) td.classList.add('today-col');
+                td.innerHTML = `<input type="checkbox" class="day-cb" data-id="${habit.id}" data-day="${day}" ${habit.completedDays[day] ? 'checked' : ''}>`;
+                row.appendChild(td);
             });
 
-            attachEventListeners();
-        }
+            // Streak cell
+            const streakTd = document.createElement('td');
+            streakTd.className = 'streak-cell';
+            const s = calcStreak(habit);
+            streakTd.textContent = s > 0 ? s : '—';
+            row.appendChild(streakTd);
 
-        function attachEventListeners() {
-            document.querySelectorAll('.delete-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    deleteHabit(parseInt(this.dataset.habitId));
-                });
-            });
-
-            document.querySelectorAll('.goal-input').forEach(input => {
-                input.addEventListener('change', function() {
-                    const habit = habits.find(h => h.id === parseInt(this.dataset.habitId));
-                    if (habit) {
-                        habit.goal = this.value;
-                        saveToLocalStorage();
-                    }
-                });
-            });
-
-            document.querySelectorAll('.day-checkbox').forEach(checkbox => {
-                checkbox.addEventListener('change', function(event) {
-                    handleCheckboxChange(
-                        parseInt(this.dataset.habitId),
-                        this.dataset.day,
-                        this.checked,
-                        event
-                    );
-                });
-            });
-        }
-
-        // ========================================
-        // TABS
-        // ========================================
-        function switchTab(tabName) {
-            if (tabName === 'home') {
-                homeTab.classList.add('active');
-                statsTab.classList.remove('active');
-                homeNavBtn.classList.add('active');
-                statsNavBtn.classList.remove('active');
-            } else if (tabName === 'stats') {
-                homeTab.classList.remove('active');
-                statsTab.classList.add('active');
-                homeNavBtn.classList.remove('active');
-                statsNavBtn.classList.add('active');
-                updateChart();
-            }
-        }
-
-        homeNavBtn.addEventListener('click', () => switchTab('home'));
-        statsNavBtn.addEventListener('click', () => switchTab('stats'));
-
-        // ========================================
-        // CHART
-        // ========================================
-        let weeklyChart = null;
-
-        function updateChart() {
-            const checksPerDay = {
-                mon: 0, tue: 0, wed: 0, thu: 0,
-                fri: 0, sat: 0, sun: 0
-            };
-
-            habits.forEach(habit => {
-                DAYS.forEach(day => {
-                    if (habit.completedDays[day]) {
-                        checksPerDay[day]++;
-                    }
-                });
-            });
-
-            const data = {
-                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                datasets: [{
-                    label: 'Completed Habits',
-                    data: DAYS.map(day => checksPerDay[day]),
-                    backgroundColor: '#14B8A6',
-                    borderColor: '#0D9488',
-                    borderWidth: 2,
-                    borderRadius: 8
-                }]
-            };
-
-            const config = {
-                type: 'bar',
-                data: data,
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { stepSize: 1 }
-                        }
-                    }
-                }
-            };
-
-            if (weeklyChart) {
-                weeklyChart.destroy();
-            }
-
-            const ctx = document.getElementById('weeklyChart').getContext('2d');
-            weeklyChart = new Chart(ctx, config);
-        }
-
-        // ========================================
-        // EVENT LISTENERS
-        // ========================================
-        addHabitBtn.addEventListener('click', addHabit);
-        habitInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') addHabit();
+            habitTableBody.appendChild(row);
         });
 
-        // ========================================
-        // INITIALIZE
-        // ========================================
-        loadFromLocalStorage();
-        updateXPBar();
-        renderHabits();
-        updateChart();
+        // Attach events
+        habitTableBody.querySelectorAll('.delete-btn').forEach(btn =>
+            btn.addEventListener('click', () => deleteHabit(parseInt(btn.dataset.id)))
+        );
+        habitTableBody.querySelectorAll('.goal-input').forEach(inp =>
+            inp.addEventListener('change', () => {
+                const h = habits.find(h => h.id === parseInt(inp.dataset.id));
+                if (h) { h.goal = inp.value; save(); }
+            })
+        );
+        habitTableBody.querySelectorAll('.day-cb').forEach(cb =>
+            cb.addEventListener('change', evt =>
+                handleCheckbox(parseInt(cb.dataset.id), cb.dataset.day, cb.checked, evt)
+            )
+        );
+    }
+
+    // Simple HTML escape
+    function escHtml(str) {
+        return String(str)
+            .replace(/&/g,'&amp;')
+            .replace(/</g,'&lt;')
+            .replace(/>/g,'&gt;')
+            .replace(/"/g,'&quot;');
+    }
+
+    // ============================================================
+    //  RADAR CHART
+    // ============================================================
+    let radarInst = null;
+
+    function updateRadarChart() {
+        const pts = getAttrPoints();
+        const data = [pts.strength, pts.agility, pts.intelligence, pts.sense, pts.vitality];
+
+        if (radarInst) {
+            radarInst.data.datasets[0].data = data;
+            radarInst.update();
+            return;
+        }
+
+        const ctx = document.getElementById('radarChart').getContext('2d');
+        radarInst = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: ['STRENGTH','AGILITY','INTELLIGENCE','SENSE','VITALITY'],
+                datasets: [{
+                    label: 'Attributes',
+                    data,
+                    backgroundColor: 'rgba(0,212,255,0.09)',
+                    borderColor: '#00d4ff',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#00d4ff',
+                    pointBorderColor: '#000814',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    pointHoverBackgroundColor: '#fff',
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        grid:        { color: 'rgba(0,212,255,0.14)' },
+                        angleLines:  { color: 'rgba(0,212,255,0.14)' },
+                        ticks: {
+                            color: 'rgba(0,212,255,0.45)',
+                            backdropColor: 'transparent',
+                            font: { family:'Orbitron', size:9 },
+                            stepSize: 1
+                        },
+                        pointLabels: {
+                            color: '#00d4ff',
+                            font:  { family:'Orbitron', size:10, weight:'700' }
+                        }
+                    }
+                },
+                plugins: { legend: { display:false } }
+            }
+        });
+    }
+
+    // ============================================================
+    //  TAB SWITCHING
+    // ============================================================
+    function switchTab(tab) {
+        if (tab === 'home') {
+            homeTab.classList.add('active');
+            statsTab.classList.remove('active');
+            homeNavBtn.classList.add('active');
+            statsNavBtn.classList.remove('active');
+        } else {
+            statsTab.classList.add('active');
+            homeTab.classList.remove('active');
+            statsNavBtn.classList.add('active');
+            homeNavBtn.classList.remove('active');
+            updateRadarChart();
+            renderInventory();
+        }
+        playPing();
+    }
+
+    homeNavBtn.addEventListener('click', () => switchTab('home'));
+    statsNavBtn.addEventListener('click', () => switchTab('stats'));
+
+    // ============================================================
+    //  EVENTS
+    // ============================================================
+    addHabitBtn.addEventListener('click', addHabit);
+    habitInput.addEventListener('keypress', e => { if (e.key === 'Enter') addHabit(); });
+
+    // ============================================================
+    //  DATE DISPLAY
+    // ============================================================
+    function updateDate() {
+        const now = new Date();
+        const opts = { year:'numeric', month:'short', day:'2-digit',
+                       weekday:'short', hour:'2-digit', minute:'2-digit', hour12:false };
+        headerDate.textContent =
+            `[ DATE: ${now.toLocaleDateString('en-US', opts).toUpperCase()} ]`;
+    }
+    updateDate();
+    setInterval(updateDate, 30000);
+
+    // ============================================================
+    //  INIT
+    // ============================================================
+    load();
+    refreshHUD();
+    renderHabits();
+    updateRadarChart();
+    renderInventory();
+    checkPenalty(); // run on load in case it's past 10 PM
     </script>
 </body>
 </html>
