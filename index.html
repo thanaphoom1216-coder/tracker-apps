@@ -3,23 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Quest Log - Habit Tracker</title>
+    <title>Habit Tracker</title>
+    
+    <!-- Chart.js Library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
     <style>
         /* ========================================
-           CSS VARIABLES - Our Color Palette
+           COLOR PALETTE - Peach/Productivity Theme
            ======================================== */
         :root {
-            --bg-dark: #1a0f2e;
-            --bg-card: #2d1b4e;
-            --accent-primary: #8b5cf6;
-            --accent-secondary: #a78bfa;
-            --accent-gold: #fbbf24;
-            --text-primary: #e9d5ff;
-            --text-secondary: #c4b5fd;
-            --border-color: #4c1d95;
-            --shadow: rgba(0, 0, 0, 0.5);
-            --success-green: #10b981;
-            --danger-red: #ef4444;
+            --bg-main: #FFF8F0;
+            --bg-card: #FFFFFF;
+            --bg-secondary: #FFF5EB;
+            --text-primary: #2C2C2C;
+            --text-secondary: #6B6B6B;
+            --border-light: #E5E5E5;
+            --border-medium: #D4D4D4;
+            --accent-teal: #14B8A6;
+            --accent-teal-dark: #0D9488;
+            --accent-gold: #F59E0B;
+            --accent-peach: #FFB088;
+            --shadow: rgba(0, 0, 0, 0.08);
         }
 
         /* ========================================
@@ -32,126 +37,116 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, var(--bg-dark) 0%, #0f0a1e 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--bg-main);
             color: var(--text-primary);
             min-height: 100vh;
-            padding: 20px;
+            padding-bottom: 80px; /* Space for fixed footer */
         }
 
         .container {
-            max-width: 1000px;
+            max-width: 900px;
             margin: 0 auto;
+            padding: 20px;
         }
 
         /* ========================================
-           HEADER
+           HEADER & XP BAR (Always Visible)
            ======================================== */
         .header {
             text-align: center;
             margin-bottom: 20px;
             padding: 20px;
             background: var(--bg-card);
-            border-radius: 15px;
-            border: 2px solid var(--border-color);
-            box-shadow: 0 8px 20px var(--shadow);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px var(--shadow);
         }
 
         .header h1 {
-            font-size: 2rem;
-            color: var(--accent-secondary);
-            text-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
-            letter-spacing: 2px;
+            font-size: 1.8rem;
+            color: var(--text-primary);
+            font-weight: 700;
+            margin-bottom: 5px;
         }
 
         .header p {
-            margin-top: 8px;
             font-size: 0.9rem;
             color: var(--text-secondary);
-            font-style: italic;
         }
 
-        /* ========================================
-           HERO STATUS BAR
-           ======================================== */
-        .hero-status {
+        /* XP Bar */
+        .xp-section {
             background: var(--bg-card);
-            padding: 20px;
-            border-radius: 15px;
-            border: 2px solid var(--border-color);
-            box-shadow: 0 8px 20px var(--shadow);
-            margin-bottom: 25px;
+            padding: 16px 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px var(--shadow);
+            margin-bottom: 20px;
         }
 
-        .hero-info {
+        .xp-info {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
 
-        .hero-level {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--accent-gold);
-            text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
-        }
-
-        .hero-level-label {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            margin-bottom: 5px;
+        .level-display {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--accent-teal);
         }
 
         .xp-text {
             font-size: 0.9rem;
             color: var(--text-secondary);
-            text-align: right;
+            font-weight: 500;
         }
 
         .xp-bar-container {
             width: 100%;
-            height: 25px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 12px;
+            height: 20px;
+            background: var(--bg-secondary);
+            border-radius: 10px;
             overflow: hidden;
-            border: 2px solid var(--border-color);
+            border: 1px solid var(--border-light);
         }
 
         .xp-bar-fill {
             height: 100%;
-            background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 50%, #fbbf24 100%);
-            background-size: 200% 100%;
+            background: linear-gradient(90deg, var(--accent-teal) 0%, var(--accent-teal-dark) 100%);
             border-radius: 10px;
             transition: width 0.5s ease;
-            box-shadow: 0 0 20px rgba(251, 191, 36, 0.6);
-            animation: shimmer 2s infinite;
-        }
-
-        @keyframes shimmer {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
         }
 
         @keyframes levelUpPulse {
             0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
+            50% { transform: scale(1.08); }
         }
 
         .level-up-animation {
-            animation: levelUpPulse 0.6s ease-in-out;
+            animation: levelUpPulse 0.5s ease-in-out;
         }
 
         /* ========================================
-           INPUT SECTION - Add Habit
+           TAB CONTENT AREAS
+           ======================================== */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* ========================================
+           HOME TAB - Habit Grid
            ======================================== */
         .input-section {
             background: var(--bg-card);
-            padding: 20px;
-            border-radius: 15px;
-            border: 2px solid var(--border-color);
-            box-shadow: 0 8px 20px var(--shadow);
-            margin-bottom: 25px;
+            padding: 16px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px var(--shadow);
+            margin-bottom: 20px;
         }
 
         .input-group {
@@ -161,115 +156,103 @@
 
         #habitInput {
             flex: 1;
-            padding: 12px 16px;
-            border: 2px solid var(--accent-primary);
+            padding: 12px 14px;
+            border: 2px solid var(--border-medium);
             border-radius: 8px;
-            background: rgba(139, 92, 246, 0.1);
+            background: var(--bg-main);
             color: var(--text-primary);
             font-size: 1rem;
             outline: none;
-            transition: all 0.3s ease;
+            transition: border-color 0.2s ease;
         }
 
         #habitInput::placeholder {
             color: var(--text-secondary);
-            opacity: 0.6;
         }
 
         #habitInput:focus {
-            border-color: var(--accent-secondary);
-            box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
+            border-color: var(--accent-teal);
         }
 
         #addHabitBtn {
             padding: 12px 24px;
-            background: linear-gradient(135deg, var(--accent-primary) 0%, #7c3aed 100%);
+            background: var(--accent-teal);
             color: white;
             border: none;
             border-radius: 8px;
             font-size: 1rem;
-            font-weight: bold;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3);
+            transition: background 0.2s ease;
         }
 
         #addHabitBtn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(139, 92, 246, 0.5);
+            background: var(--accent-teal-dark);
         }
 
-        /* ========================================
-           HABIT GRID - The Main Table
-           ======================================== */
+        #addHabitBtn:active {
+            transform: scale(0.98);
+        }
+
+        /* Habit Table */
         .habit-grid-section {
             background: var(--bg-card);
             padding: 20px;
-            border-radius: 15px;
-            border: 2px solid var(--border-color);
-            box-shadow: 0 8px 20px var(--shadow);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px var(--shadow);
             overflow-x: auto;
         }
 
         .section-title {
-            font-size: 1.2rem;
-            color: var(--accent-secondary);
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 16px;
         }
 
-        .section-title::before {
-            content: "📊";
-            font-size: 1.4rem;
-        }
-
-        /* The habit table */
         .habit-table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 700px;
+            min-width: 650px;
         }
 
         .habit-table thead {
-            background: rgba(139, 92, 246, 0.2);
+            background: var(--bg-secondary);
         }
 
         .habit-table th {
             padding: 12px 10px;
             text-align: center;
-            color: var(--accent-secondary);
-            font-weight: bold;
-            border: 1px solid var(--border-color);
-            font-size: 0.9rem;
+            color: var(--text-primary);
+            font-weight: 600;
+            border: 1px solid var(--border-light);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .habit-table th:first-child {
             text-align: left;
-            min-width: 200px;
+            min-width: 180px;
         }
 
         .habit-table th:nth-child(2) {
-            min-width: 80px;
+            min-width: 70px;
         }
 
         .habit-table td {
             padding: 12px 10px;
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--border-light);
             text-align: center;
+            background: white;
         }
 
         .habit-table td:first-child {
             text-align: left;
         }
 
-        .habit-table tbody tr {
-            transition: background 0.2s ease;
-        }
-
         .habit-table tbody tr:hover {
-            background: rgba(139, 92, 246, 0.1);
+            background: var(--bg-secondary);
         }
 
         /* Habit name cell */
@@ -282,28 +265,29 @@
         .habit-name {
             flex: 1;
             color: var(--text-primary);
+            font-weight: 500;
         }
 
         .delete-btn {
             background: none;
             border: none;
-            color: var(--danger-red);
-            font-size: 1.2rem;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
             cursor: pointer;
-            transition: transform 0.2s ease;
             padding: 4px;
+            transition: color 0.2s ease;
         }
 
         .delete-btn:hover {
-            transform: scale(1.2);
+            color: #EF4444;
         }
 
         /* Goal input */
         .goal-input {
-            width: 60px;
+            width: 50px;
             padding: 6px;
-            background: rgba(139, 92, 246, 0.1);
-            border: 1px solid var(--accent-primary);
+            background: var(--bg-main);
+            border: 1px solid var(--border-medium);
             border-radius: 4px;
             color: var(--text-primary);
             text-align: center;
@@ -312,29 +296,164 @@
 
         .goal-input:focus {
             outline: none;
-            border-color: var(--accent-secondary);
+            border-color: var(--accent-teal);
         }
 
-        /* Checkboxes */
+        /* Custom Checkboxes - Clean Square Style */
+        .checkbox-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
         .day-checkbox {
-            width: 22px;
-            height: 22px;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--border-medium);
+            border-radius: 4px;
             cursor: pointer;
-            accent-color: var(--success-green);
+            position: relative;
+            background: white;
+            transition: all 0.2s ease;
+        }
+
+        .day-checkbox:hover {
+            border-color: var(--accent-teal);
+        }
+
+        .day-checkbox:checked {
+            background: white;
+            border-color: var(--accent-teal);
+        }
+
+        /* The X mark when checked */
+        .day-checkbox:checked::after {
+            content: '✕';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--accent-teal);
+            font-size: 18px;
+            font-weight: bold;
+            line-height: 1;
         }
 
         .empty-state {
             text-align: center;
-            padding: 40px 20px;
+            padding: 30px 20px;
             color: var(--text-secondary);
             font-style: italic;
+        }
+
+        /* ========================================
+           STATS TAB - Dashboard
+           ======================================== */
+        .stats-container {
+            display: grid;
+            gap: 20px;
+        }
+
+        .stats-card {
+            background: var(--bg-card);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .stats-card h2 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .summary-item {
+            text-align: center;
+            padding: 16px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+        }
+
+        .summary-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .summary-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent-teal);
+        }
+
+        /* Chart container */
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        /* ========================================
+           FOOTER NAVIGATION (Fixed Bottom)
+           ======================================== */
+        .footer-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-card);
+            border-top: 1px solid var(--border-light);
+            box-shadow: 0 -2px 10px var(--shadow);
+            display: flex;
+            justify-content: center;
+            padding: 12px 20px;
+            z-index: 1000;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 12px;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .nav-btn {
+            flex: 1;
+            padding: 14px 20px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 2px solid var(--border-light);
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .nav-btn:hover {
+            background: var(--bg-main);
+        }
+
+        .nav-btn.active {
+            background: var(--accent-teal);
+            color: white;
+            border-color: var(--accent-teal);
         }
 
         /* ========================================
            MOBILE RESPONSIVENESS
            ======================================== */
         @media (max-width: 768px) {
-            body {
+            .container {
                 padding: 15px;
             }
 
@@ -350,10 +469,6 @@
                 width: 100%;
             }
 
-            .habit-grid-section {
-                padding: 15px;
-            }
-
             .habit-table {
                 font-size: 0.85rem;
             }
@@ -362,24 +477,34 @@
             .habit-table td {
                 padding: 8px 6px;
             }
+
+            .day-checkbox {
+                width: 20px;
+                height: 20px;
+            }
+
+            .day-checkbox:checked::after {
+                font-size: 15px;
+            }
+
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- HEADER -->
+        <!-- HEADER (Always Visible) -->
         <div class="header">
-            <h1>⚔️ MY QUEST LOG ⚔️</h1>
-            <p>Master your habits, level up your life</p>
+            <h1>Habit Tracker</h1>
+            <p>Build consistency, level up your life</p>
         </div>
 
-        <!-- HERO STATUS BAR -->
-        <div class="hero-status">
-            <div class="hero-info">
-                <div>
-                    <div class="hero-level-label">Hero Level</div>
-                    <div class="hero-level" id="heroLevel">1</div>
-                </div>
+        <!-- XP BAR (Always Visible) -->
+        <div class="xp-section">
+            <div class="xp-info">
+                <div class="level-display" id="levelDisplay">Level 1</div>
                 <div class="xp-text">
                     <span id="currentXP">0</span> / <span id="maxXP">100</span> XP
                 </div>
@@ -389,44 +514,83 @@
             </div>
         </div>
 
-        <!-- INPUT SECTION -->
-        <div class="input-section">
-            <div class="input-group">
-                <input 
-                    type="text" 
-                    id="habitInput" 
-                    placeholder="Enter a new habit (e.g., 'Workout', 'Read 20 pages')..."
-                    autocomplete="off"
-                >
-                <button id="addHabitBtn">Add Habit</button>
+        <!-- HOME TAB CONTENT -->
+        <div id="homeTab" class="tab-content active">
+            <!-- Add Habit Input -->
+            <div class="input-section">
+                <div class="input-group">
+                    <input 
+                        type="text" 
+                        id="habitInput" 
+                        placeholder="Enter new habit..."
+                        autocomplete="off"
+                    >
+                    <button id="addHabitBtn">Add Habit</button>
+                </div>
+            </div>
+
+            <!-- Habit Grid -->
+            <div class="habit-grid-section">
+                <div class="section-title">Weekly Tracker</div>
+                <table class="habit-table">
+                    <thead>
+                        <tr>
+                            <th>Habit</th>
+                            <th>Goal</th>
+                            <th>Mon</th>
+                            <th>Tue</th>
+                            <th>Wed</th>
+                            <th>Thu</th>
+                            <th>Fri</th>
+                            <th>Sat</th>
+                            <th>Sun</th>
+                        </tr>
+                    </thead>
+                    <tbody id="habitTableBody">
+                        <tr>
+                            <td colspan="9" class="empty-state">
+                                No habits yet. Add your first habit to get started!
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
-        <!-- HABIT GRID -->
-        <div class="habit-grid-section">
-            <div class="section-title">Weekly Habit Tracker</div>
-            <table class="habit-table">
-                <thead>
-                    <tr>
-                        <th>Habit</th>
-                        <th>Goal</th>
-                        <th>Mon</th>
-                        <th>Tue</th>
-                        <th>Wed</th>
-                        <th>Thu</th>
-                        <th>Fri</th>
-                        <th>Sat</th>
-                        <th>Sun</th>
-                    </tr>
-                </thead>
-                <tbody id="habitTableBody">
-                    <tr>
-                        <td colspan="9" class="empty-state">
-                            No habits yet. Add your first habit to begin tracking!
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+        <!-- STATS TAB CONTENT -->
+        <div id="statsTab" class="tab-content">
+            <div class="stats-container">
+                <!-- Summary Card -->
+                <div class="stats-card">
+                    <h2>Summary</h2>
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <div class="summary-label">Total XP</div>
+                            <div class="summary-value" id="lifetimeXP">0</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">Level</div>
+                            <div class="summary-value" id="statsLevel">1</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart Card -->
+                <div class="stats-card">
+                    <h2>Daily Activity</h2>
+                    <div class="chart-container">
+                        <canvas id="weeklyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER NAVIGATION -->
+    <div class="footer-nav">
+        <div class="nav-buttons">
+            <button class="nav-btn active" id="homeNavBtn">🏠 Home</button>
+            <button class="nav-btn" id="statsNavBtn">📊 Stats</button>
         </div>
     </div>
 
@@ -437,55 +601,87 @@
         const habitInput = document.getElementById('habitInput');
         const addHabitBtn = document.getElementById('addHabitBtn');
         const habitTableBody = document.getElementById('habitTableBody');
-        const heroLevelDisplay = document.getElementById('heroLevel');
+        const levelDisplay = document.getElementById('levelDisplay');
         const currentXPDisplay = document.getElementById('currentXP');
         const maxXPDisplay = document.getElementById('maxXP');
         const xpBarFill = document.getElementById('xpBarFill');
+        const lifetimeXPDisplay = document.getElementById('lifetimeXP');
+        const statsLevelDisplay = document.getElementById('statsLevel');
+
+        // Tab elements
+        const homeTab = document.getElementById('homeTab');
+        const statsTab = document.getElementById('statsTab');
+        const homeNavBtn = document.getElementById('homeNavBtn');
+        const statsNavBtn = document.getElementById('statsNavBtn');
 
         // ========================================
-        // GAME STATE VARIABLES
+        // GAME STATE
         // ========================================
         let currentLevel = 1;
         let currentXP = 0;
+        let lifetimeXP = 0; // NEW: Track total XP earned
         const xpPerCheck = 20;
         const xpToLevelUp = 100;
 
-        // ========================================
-        // HABIT DATA STRUCTURE
-        // ========================================
-        // This array stores all habits and their completion state
         let habits = [];
         let habitIdCounter = 0;
 
         const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 
         // ========================================
-        // UPDATE XP BAR
+        // LOCALSTORAGE - Load & Save
+        // ========================================
+        function saveToLocalStorage() {
+            const data = {
+                habits: habits,
+                currentLevel: currentLevel,
+                currentXP: currentXP,
+                lifetimeXP: lifetimeXP,
+                habitIdCounter: habitIdCounter
+            };
+            localStorage.setItem('habitTrackerData', JSON.stringify(data));
+        }
+
+        function loadFromLocalStorage() {
+            const savedData = localStorage.getItem('habitTrackerData');
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                habits = data.habits || [];
+                currentLevel = data.currentLevel || 1;
+                currentXP = data.currentXP || 0;
+                lifetimeXP = data.lifetimeXP || 0;
+                habitIdCounter = data.habitIdCounter || 0;
+            }
+        }
+
+        // ========================================
+        // XP & LEVEL FUNCTIONS
         // ========================================
         function updateXPBar() {
             const percentage = (currentXP / xpToLevelUp) * 100;
             xpBarFill.style.width = percentage + '%';
             currentXPDisplay.textContent = currentXP;
             maxXPDisplay.textContent = xpToLevelUp;
-            heroLevelDisplay.textContent = currentLevel;
+            levelDisplay.textContent = 'Level ' + currentLevel;
+            
+            // Update stats tab
+            lifetimeXPDisplay.textContent = lifetimeXP;
+            statsLevelDisplay.textContent = currentLevel;
         }
 
-        // ========================================
-        // GAIN XP
-        // ========================================
         function gainXP(amount) {
             currentXP += amount;
+            lifetimeXP += amount;
 
             if (currentXP >= xpToLevelUp) {
                 levelUp();
             } else {
                 updateXPBar();
             }
+            
+            saveToLocalStorage();
         }
 
-        // ========================================
-        // LEVEL UP
-        // ========================================
         function levelUp() {
             const overflowXP = currentXP - xpToLevelUp;
             currentLevel++;
@@ -493,16 +689,17 @@
             
             updateXPBar();
             
-            heroLevelDisplay.classList.add('level-up-animation');
+            levelDisplay.classList.add('level-up-animation');
             setTimeout(() => {
-                heroLevelDisplay.classList.remove('level-up-animation');
-            }, 600);
+                levelDisplay.classList.remove('level-up-animation');
+            }, 500);
             
-            alert('🎉 LEVEL UP! 🎉\n\nYou are now Level ' + currentLevel + '!\nKeep building those habits!');
+            alert('🎉 LEVEL UP!\n\nYou reached Level ' + currentLevel + '!');
+            saveToLocalStorage();
         }
 
         // ========================================
-        // ADD HABIT
+        // HABIT MANAGEMENT
         // ========================================
         function addHabit() {
             const habitName = habitInput.value.trim();
@@ -512,7 +709,6 @@
                 return;
             }
 
-            // Create new habit object
             const newHabit = {
                 id: habitIdCounter++,
                 name: habitName,
@@ -533,42 +729,33 @@
             habitInput.focus();
             
             renderHabits();
+            saveToLocalStorage();
         }
 
-        // ========================================
-        // DELETE HABIT
-        // ========================================
         function deleteHabit(habitId) {
-            if (confirm('Are you sure you want to delete this habit?')) {
+            if (confirm('Delete this habit?')) {
                 habits = habits.filter(h => h.id !== habitId);
                 renderHabits();
+                saveToLocalStorage();
+                updateChart(); // Update chart when habit deleted
             }
         }
 
-        // ========================================
-        // HANDLE CHECKBOX CHANGE
-        // ========================================
-        // This is the key function for XP logic
         function handleCheckboxChange(habitId, day, isChecked) {
             const habit = habits.find(h => h.id === habitId);
-            
             if (!habit) return;
 
-            // If checkbox is being checked
             if (isChecked) {
-                // Only give XP if this day hasn't been completed before
                 if (!habit.completedDays[day]) {
                     habit.completedDays[day] = true;
                     gainXP(xpPerCheck);
+                    updateChart(); // Update chart when box checked
                 }
             }
-            // If unchecking: do nothing (XP already awarded, don't take it back)
-            // The completedDays[day] stays true, so re-checking won't give XP again
+            
+            saveToLocalStorage();
         }
 
-        // ========================================
-        // RENDER HABITS TABLE
-        // ========================================
         function renderHabits() {
             habitTableBody.innerHTML = '';
 
@@ -576,7 +763,7 @@
                 habitTableBody.innerHTML = `
                     <tr>
                         <td colspan="9" class="empty-state">
-                            No habits yet. Add your first habit to begin tracking!
+                            No habits yet. Add your first habit to get started!
                         </td>
                     </tr>
                 `;
@@ -586,17 +773,17 @@
             habits.forEach(habit => {
                 const row = document.createElement('tr');
 
-                // COLUMN 1: Habit Name + Delete Button
+                // Habit name + delete
                 const nameCell = document.createElement('td');
                 nameCell.innerHTML = `
                     <div class="habit-name-cell">
                         <span class="habit-name">${habit.name}</span>
-                        <button class="delete-btn" data-habit-id="${habit.id}">🗑️</button>
+                        <button class="delete-btn" data-habit-id="${habit.id}">🗑</button>
                     </div>
                 `;
                 row.appendChild(nameCell);
 
-                // COLUMN 2: Goal Input
+                // Goal input
                 const goalCell = document.createElement('td');
                 goalCell.innerHTML = `
                     <input 
@@ -609,80 +796,160 @@
                 `;
                 row.appendChild(goalCell);
 
-                // COLUMNS 3-9: Day Checkboxes
+                // Day checkboxes
                 DAYS.forEach(day => {
                     const dayCell = document.createElement('td');
-                    const checkbox = document.createElement('input');
-                    checkbox.type = 'checkbox';
-                    checkbox.className = 'day-checkbox';
-                    checkbox.dataset.habitId = habit.id;
-                    checkbox.dataset.day = day;
-                    
-                    // Check if this day was already completed
-                    checkbox.checked = habit.completedDays[day];
-                    
-                    dayCell.appendChild(checkbox);
+                    dayCell.innerHTML = `
+                        <div class="checkbox-container">
+                            <input 
+                                type="checkbox" 
+                                class="day-checkbox"
+                                data-habit-id="${habit.id}"
+                                data-day="${day}"
+                                ${habit.completedDays[day] ? 'checked' : ''}
+                            >
+                        </div>
+                    `;
                     row.appendChild(dayCell);
                 });
 
                 habitTableBody.appendChild(row);
             });
 
-            // Attach event listeners after rendering
             attachEventListeners();
         }
 
-        // ========================================
-        // ATTACH EVENT LISTENERS
-        // ========================================
         function attachEventListeners() {
             // Delete buttons
             document.querySelectorAll('.delete-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
-                    const habitId = parseInt(this.dataset.habitId);
-                    deleteHabit(habitId);
+                    deleteHabit(parseInt(this.dataset.habitId));
                 });
             });
 
             // Goal inputs
             document.querySelectorAll('.goal-input').forEach(input => {
                 input.addEventListener('change', function() {
-                    const habitId = parseInt(this.dataset.habitId);
-                    const habit = habits.find(h => h.id === habitId);
+                    const habit = habits.find(h => h.id === parseInt(this.dataset.habitId));
                     if (habit) {
                         habit.goal = this.value;
+                        saveToLocalStorage();
                     }
                 });
             });
 
-            // Day checkboxes
+            // Checkboxes
             document.querySelectorAll('.day-checkbox').forEach(checkbox => {
                 checkbox.addEventListener('change', function() {
-                    const habitId = parseInt(this.dataset.habitId);
-                    const day = this.dataset.day;
-                    const isChecked = this.checked;
-                    
-                    handleCheckboxChange(habitId, day, isChecked);
+                    handleCheckboxChange(
+                        parseInt(this.dataset.habitId),
+                        this.dataset.day,
+                        this.checked
+                    );
                 });
             });
         }
 
         // ========================================
-        // EVENT LISTENERS - Add Habit
+        // TAB NAVIGATION
+        // ========================================
+        function switchTab(tabName) {
+            if (tabName === 'home') {
+                homeTab.classList.add('active');
+                statsTab.classList.remove('active');
+                homeNavBtn.classList.add('active');
+                statsNavBtn.classList.remove('active');
+            } else if (tabName === 'stats') {
+                homeTab.classList.remove('active');
+                statsTab.classList.add('active');
+                homeNavBtn.classList.remove('active');
+                statsNavBtn.classList.add('active');
+                updateChart(); // Update chart when switching to stats
+            }
+        }
+
+        homeNavBtn.addEventListener('click', () => switchTab('home'));
+        statsNavBtn.addEventListener('click', () => switchTab('stats'));
+
+        // ========================================
+        // CHART.JS - Weekly Activity Chart
+        // ========================================
+        let weeklyChart = null;
+
+        function updateChart() {
+            // Calculate checks per day
+            const checksPerDay = {
+                mon: 0, tue: 0, wed: 0, thu: 0, 
+                fri: 0, sat: 0, sun: 0
+            };
+
+            habits.forEach(habit => {
+                DAYS.forEach(day => {
+                    if (habit.completedDays[day]) {
+                        checksPerDay[day]++;
+                    }
+                });
+            });
+
+            const data = {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Completed Habits',
+                    data: DAYS.map(day => checksPerDay[day]),
+                    backgroundColor: '#14B8A6',
+                    borderColor: '#0D9488',
+                    borderWidth: 2,
+                    borderRadius: 6
+                }]
+            };
+
+            const config = {
+                type: 'bar',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            };
+
+            // Destroy old chart if exists
+            if (weeklyChart) {
+                weeklyChart.destroy();
+            }
+
+            // Create new chart
+            const ctx = document.getElementById('weeklyChart').getContext('2d');
+            weeklyChart = new Chart(ctx, config);
+        }
+
+        // ========================================
+        // EVENT LISTENERS
         // ========================================
         addHabitBtn.addEventListener('click', addHabit);
-        
-        habitInput.addEventListener('keypress', function(event) {
-            if (event.key === 'Enter') {
-                addHabit();
-            }
+        habitInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addHabit();
         });
 
         // ========================================
-        // INITIALIZE
+        // INITIALIZE APP
         // ========================================
+        loadFromLocalStorage();
         updateXPBar();
         renderHabits();
+        updateChart();
     </script>
 </body>
 </html>
