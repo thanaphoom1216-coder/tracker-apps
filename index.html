@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Quest Log - Habit Tracker</title>
+    <style>
+        /* ========================================
+           CSS VARIABLES - Our Color Palette
+           ======================================== */
+        :root {
+            --bg-dark: #1a0f2e;
+            --bg-card: #2d1b4e;
+            --accent-primary: #8b5cf6;
+            --accent-secondary: #a78bfa;
+            --accent-gold: #fbbf24;
+            --text-primary: #e9d5ff;
+            --text-secondary: #c4b5fd;
+            --border-color: #4c1d95;
+            --shadow: rgba(0, 0, 0, 0.5);
+            --success-green: #10b981;
+            --danger-red: #ef4444;
+        }
+
+        /* ========================================
+           RESET & BASE STYLES
+           ======================================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #0f0a1e 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* ========================================
+           HEADER
+           ======================================== */
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: var(--bg-card);
+            border-radius: 15px;
+            border: 2px solid var(--border-color);
+            box-shadow: 0 8px 20px var(--shadow);
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            color: var(--accent-secondary);
+            text-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+            letter-spacing: 2px;
+        }
+
+        .header p {
+            margin-top: 8px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        /* ========================================
+           HERO STATUS BAR
+           ======================================== */
+        .hero-status {
+            background: var(--bg-card);
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid var(--border-color);
+            box-shadow: 0 8px 20px var(--shadow);
+            margin-bottom: 25px;
+        }
+
+        .hero-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .hero-level {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--accent-gold);
+            text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+        }
+
+        .hero-level-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+
+        .xp-text {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            text-align: right;
+        }
+
+        .xp-bar-container {
+            width: 100%;
+            height: 25px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid var(--border-color);
+        }
+
+        .xp-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 50%, #fbbf24 100%);
+            background-size: 200% 100%;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 20px rgba(251, 191, 36, 0.6);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        @keyframes levelUpPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .level-up-animation {
+            animation: levelUpPulse 0.6s ease-in-out;
+        }
+
+        /* ========================================
+           INPUT SECTION - Add Habit
+           ======================================== */
+        .input-section {
+            background: var(--bg-card);
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid var(--border-color);
+            box-shadow: 0 8px 20px var(--shadow);
+            margin-bottom: 25px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        #habitInput {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid var(--accent-primary);
+            border-radius: 8px;
+            background: rgba(139, 92, 246, 0.1);
+            color: var(--text-primary);
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        #habitInput::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.6;
+        }
+
+        #habitInput:focus {
+            border-color: var(--accent-secondary);
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
+        }
+
+        #addHabitBtn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--accent-primary) 0%, #7c3aed 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3);
+        }
+
+        #addHabitBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(139, 92, 246, 0.5);
+        }
+
+        /* ========================================
+           HABIT GRID - The Main Table
+           ======================================== */
+        .habit-grid-section {
+            background: var(--bg-card);
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid var(--border-color);
+            box-shadow: 0 8px 20px var(--shadow);
+            overflow-x: auto;
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            color: var(--accent-secondary);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::before {
+            content: "📊";
+            font-size: 1.4rem;
+        }
+
+        /* The habit table */
+        .habit-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 700px;
+        }
+
+        .habit-table thead {
+            background: rgba(139, 92, 246, 0.2);
+        }
+
+        .habit-table th {
+            padding: 12px 10px;
+            text-align: center;
+            color: var(--accent-secondary);
+            font-weight: bold;
+            border: 1px solid var(--border-color);
+            font-size: 0.9rem;
+        }
+
+        .habit-table th:first-child {
+            text-align: left;
+            min-width: 200px;
+        }
+
+        .habit-table th:nth-child(2) {
+            min-width: 80px;
+        }
+
+        .habit-table td {
+            padding: 12px 10px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .habit-table td:first-child {
+            text-align: left;
+        }
+
+        .habit-table tbody tr {
+            transition: background 0.2s ease;
+        }
+
+        .habit-table tbody tr:hover {
+            background: rgba(139, 92, 246, 0.1);
+        }
+
+        /* Habit name cell */
+        .habit-name-cell {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .habit-name {
+            flex: 1;
+            color: var(--text-primary);
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: var(--danger-red);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            padding: 4px;
+        }
+
+        .delete-btn:hover {
+            transform: scale(1.2);
+        }
+
+        /* Goal input */
+        .goal-input {
+            width: 60px;
+            padding: 6px;
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid var(--accent-primary);
+            border-radius: 4px;
+            color: var(--text-primary);
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .goal-input:focus {
+            outline: none;
+            border-color: var(--accent-secondary);
+        }
+
+        /* Checkboxes */
+        .day-checkbox {
+            width: 22px;
+            height: 22px;
+            cursor: pointer;
+            accent-color: var(--success-green);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        /* ========================================
+           MOBILE RESPONSIVENESS
+           ======================================== */
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            #addHabitBtn {
+                width: 100%;
+            }
+
+            .habit-grid-section {
+                padding: 15px;
+            }
+
+            .habit-table {
+                font-size: 0.85rem;
+            }
+
+            .habit-table th,
+            .habit-table td {
+                padding: 8px 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <h1>⚔️ MY QUEST LOG ⚔️</h1>
+            <p>Master your habits, level up your life</p>
+        </div>
+
+        <!-- HERO STATUS BAR -->
+        <div class="hero-status">
+            <div class="hero-info">
+                <div>
+                    <div class="hero-level-label">Hero Level</div>
+                    <div class="hero-level" id="heroLevel">1</div>
+                </div>
+                <div class="xp-text">
+                    <span id="currentXP">0</span> / <span id="maxXP">100</span> XP
+                </div>
+            </div>
+            <div class="xp-bar-container">
+                <div class="xp-bar-fill" id="xpBarFill" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- INPUT SECTION -->
+        <div class="input-section">
+            <div class="input-group">
+                <input 
+                    type="text" 
+                    id="habitInput" 
+                    placeholder="Enter a new habit (e.g., 'Workout', 'Read 20 pages')..."
+                    autocomplete="off"
+                >
+                <button id="addHabitBtn">Add Habit</button>
+            </div>
+        </div>
+
+        <!-- HABIT GRID -->
+        <div class="habit-grid-section">
+            <div class="section-title">Weekly Habit Tracker</div>
+            <table class="habit-table">
+                <thead>
+                    <tr>
+                        <th>Habit</th>
+                        <th>Goal</th>
+                        <th>Mon</th>
+                        <th>Tue</th>
+                        <th>Wed</th>
+                        <th>Thu</th>
+                        <th>Fri</th>
+                        <th>Sat</th>
+                        <th>Sun</th>
+                    </tr>
+                </thead>
+                <tbody id="habitTableBody">
+                    <tr>
+                        <td colspan="9" class="empty-state">
+                            No habits yet. Add your first habit to begin tracking!
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // ========================================
+        // ELEMENT REFERENCES
+        // ========================================
+        const habitInput = document.getElementById('habitInput');
+        const addHabitBtn = document.getElementById('addHabitBtn');
+        const habitTableBody = document.getElementById('habitTableBody');
+        const heroLevelDisplay = document.getElementById('heroLevel');
+        const currentXPDisplay = document.getElementById('currentXP');
+        const maxXPDisplay = document.getElementById('maxXP');
+        const xpBarFill = document.getElementById('xpBarFill');
+
+        // ========================================
+        // GAME STATE VARIABLES
+        // ========================================
+        let currentLevel = 1;
+        let currentXP = 0;
+        const xpPerCheck = 20;
+        const xpToLevelUp = 100;
+
+        // ========================================
+        // HABIT DATA STRUCTURE
+        // ========================================
+        // This array stores all habits and their completion state
+        let habits = [];
+        let habitIdCounter = 0;
+
+        const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+
+        // ========================================
+        // UPDATE XP BAR
+        // ========================================
+        function updateXPBar() {
+            const percentage = (currentXP / xpToLevelUp) * 100;
+            xpBarFill.style.width = percentage + '%';
+            currentXPDisplay.textContent = currentXP;
+            maxXPDisplay.textContent = xpToLevelUp;
+            heroLevelDisplay.textContent = currentLevel;
+        }
+
+        // ========================================
+        // GAIN XP
+        // ========================================
+        function gainXP(amount) {
+            currentXP += amount;
+
+            if (currentXP >= xpToLevelUp) {
+                levelUp();
+            } else {
+                updateXPBar();
+            }
+        }
+
+        // ========================================
+        // LEVEL UP
+        // ========================================
+        function levelUp() {
+            const overflowXP = currentXP - xpToLevelUp;
+            currentLevel++;
+            currentXP = overflowXP;
+            
+            updateXPBar();
+            
+            heroLevelDisplay.classList.add('level-up-animation');
+            setTimeout(() => {
+                heroLevelDisplay.classList.remove('level-up-animation');
+            }, 600);
+            
+            alert('🎉 LEVEL UP! 🎉\n\nYou are now Level ' + currentLevel + '!\nKeep building those habits!');
+        }
+
+        // ========================================
+        // ADD HABIT
+        // ========================================
+        function addHabit() {
+            const habitName = habitInput.value.trim();
+
+            if (habitName === '') {
+                alert('Please enter a habit name!');
+                return;
+            }
+
+            // Create new habit object
+            const newHabit = {
+                id: habitIdCounter++,
+                name: habitName,
+                goal: '',
+                completedDays: {
+                    mon: false,
+                    tue: false,
+                    wed: false,
+                    thu: false,
+                    fri: false,
+                    sat: false,
+                    sun: false
+                }
+            };
+
+            habits.push(newHabit);
+            habitInput.value = '';
+            habitInput.focus();
+            
+            renderHabits();
+        }
+
+        // ========================================
+        // DELETE HABIT
+        // ========================================
+        function deleteHabit(habitId) {
+            if (confirm('Are you sure you want to delete this habit?')) {
+                habits = habits.filter(h => h.id !== habitId);
+                renderHabits();
+            }
+        }
+
+        // ========================================
+        // HANDLE CHECKBOX CHANGE
+        // ========================================
+        // This is the key function for XP logic
+        function handleCheckboxChange(habitId, day, isChecked) {
+            const habit = habits.find(h => h.id === habitId);
+            
+            if (!habit) return;
+
+            // If checkbox is being checked
+            if (isChecked) {
+                // Only give XP if this day hasn't been completed before
+                if (!habit.completedDays[day]) {
+                    habit.completedDays[day] = true;
+                    gainXP(xpPerCheck);
+                }
+            }
+            // If unchecking: do nothing (XP already awarded, don't take it back)
+            // The completedDays[day] stays true, so re-checking won't give XP again
+        }
+
+        // ========================================
+        // RENDER HABITS TABLE
+        // ========================================
+        function renderHabits() {
+            habitTableBody.innerHTML = '';
+
+            if (habits.length === 0) {
+                habitTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="empty-state">
+                            No habits yet. Add your first habit to begin tracking!
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            habits.forEach(habit => {
+                const row = document.createElement('tr');
+
+                // COLUMN 1: Habit Name + Delete Button
+                const nameCell = document.createElement('td');
+                nameCell.innerHTML = `
+                    <div class="habit-name-cell">
+                        <span class="habit-name">${habit.name}</span>
+                        <button class="delete-btn" data-habit-id="${habit.id}">🗑️</button>
+                    </div>
+                `;
+                row.appendChild(nameCell);
+
+                // COLUMN 2: Goal Input
+                const goalCell = document.createElement('td');
+                goalCell.innerHTML = `
+                    <input 
+                        type="number" 
+                        class="goal-input" 
+                        placeholder="#"
+                        value="${habit.goal}"
+                        data-habit-id="${habit.id}"
+                    >
+                `;
+                row.appendChild(goalCell);
+
+                // COLUMNS 3-9: Day Checkboxes
+                DAYS.forEach(day => {
+                    const dayCell = document.createElement('td');
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.className = 'day-checkbox';
+                    checkbox.dataset.habitId = habit.id;
+                    checkbox.dataset.day = day;
+                    
+                    // Check if this day was already completed
+                    checkbox.checked = habit.completedDays[day];
+                    
+                    dayCell.appendChild(checkbox);
+                    row.appendChild(dayCell);
+                });
+
+                habitTableBody.appendChild(row);
+            });
+
+            // Attach event listeners after rendering
+            attachEventListeners();
+        }
+
+        // ========================================
+        // ATTACH EVENT LISTENERS
+        // ========================================
+        function attachEventListeners() {
+            // Delete buttons
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const habitId = parseInt(this.dataset.habitId);
+                    deleteHabit(habitId);
+                });
+            });
+
+            // Goal inputs
+            document.querySelectorAll('.goal-input').forEach(input => {
+                input.addEventListener('change', function() {
+                    const habitId = parseInt(this.dataset.habitId);
+                    const habit = habits.find(h => h.id === habitId);
+                    if (habit) {
+                        habit.goal = this.value;
+                    }
+                });
+            });
+
+            // Day checkboxes
+            document.querySelectorAll('.day-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const habitId = parseInt(this.dataset.habitId);
+                    const day = this.dataset.day;
+                    const isChecked = this.checked;
+                    
+                    handleCheckboxChange(habitId, day, isChecked);
+                });
+            });
+        }
+
+        // ========================================
+        // EVENT LISTENERS - Add Habit
+        // ========================================
+        addHabitBtn.addEventListener('click', addHabit);
+        
+        habitInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                addHabit();
+            }
+        });
+
+        // ========================================
+        // INITIALIZE
+        // ========================================
+        updateXPBar();
+        renderHabits();
+    </script>
+</body>
+</html>
